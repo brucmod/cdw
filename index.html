@@ -1990,9 +1990,11 @@ document.getElementById('upd-modal-overlay').addEventListener('click',function(e
 // Change UPD_PASSWORD below to set your own password.
 // Users only need to enter it once per browser session (sessionStorage).
 var UPD_PASSWORD='CDWupdate';
+var _updGateCallback=null;
 
-function updGateOpen(){
-  if(sessionStorage.getItem('cdw_upd_auth')==='1'){updOpen();return;}
+function updGateOpen(callback){
+  _updGateCallback=callback||updOpen;
+  if(sessionStorage.getItem('cdw_upd_auth')==='1'){_updGateCallback();return;}
   var ov=document.getElementById('upd-gate-overlay');
   ov.style.display='flex';
   document.getElementById('upd-gate-input').value='';
@@ -2010,7 +2012,7 @@ document.getElementById('upd-gate-submit').addEventListener('click',function(){
   if(entered===UPD_PASSWORD){
     sessionStorage.setItem('cdw_upd_auth','1');
     updGateClose();
-    updOpen();
+    if(_updGateCallback)_updGateCallback();
   }else{
     sts.textContent='\u26a0\ufe0f Incorrect password';
     document.getElementById('upd-gate-input').select();
@@ -2418,7 +2420,7 @@ function acctBadgeHTML(email){
 
 // Upload handler
 document.getElementById('acct-btn').addEventListener('click',function(){
-  document.getElementById('acct-file').click();
+  updGateOpen(function(){document.getElementById('acct-file').click();});
 });
 
 document.getElementById('acct-file').addEventListener('change',function(ev){
@@ -2450,7 +2452,7 @@ document.getElementById('acct-file').addEventListener('change',function(ev){
   reader.readAsArrayBuffer(file);
 });
 
-function processAcctFile(data,btn){
+async function processAcctFile(data,btn){
   try{
     var wb=XLSX.read(data,{type:'array'});
     var ws=wb.Sheets[wb.SheetNames[0]];
@@ -2564,16 +2566,37 @@ function processAcctFile(data,btn){
     buildSearchIndex();
     render();
 
-    // Download CDW_accounts.json
+    // Push CDW_accounts.json to GitHub (falls back to local download if not configured)
     var json=JSON.stringify(ACCT_MAP,null,2);
-    var blob=new Blob([json],{type:'application/json'});
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');
-    a.href=url;a.download='CDW_accounts.json';
-    document.body.appendChild(a);a.click();document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    showToast(totalAccounts.toLocaleString()+' accounts \u00b7 '+mapped.toLocaleString()+' mapped to '+sellers+' sellers \u00b7 '+skipped.toLocaleString()+' unmapped','#8FA596');
+    var owner=localStorage.getItem('gh_owner');
+    var repo=localStorage.getItem('gh_repo');
+    var token=localStorage.getItem('gh_token');
+    if(owner&&repo&&token){
+      btn.textContent='Pushing\u2026';
+      try{
+        var dummyStatus={textContent:''};
+        await ghPushFile(owner,repo,token,'CDW_accounts.json',json,dummyStatus);
+        showToast(totalAccounts.toLocaleString()+' accounts pushed to GitHub \u00b7 '+mapped.toLocaleString()+' mapped \u00b7 '+skipped.toLocaleString()+' unmapped','#8FA596');
+      }catch(pushErr){
+        showToast('Push failed: '+pushErr.message+' \u00b7 downloading locally instead','#DEA193');
+        // Fall back to download
+        var blob=new Blob([json],{type:'application/json'});
+        var url=URL.createObjectURL(blob);
+        var a=document.createElement('a');
+        a.href=url;a.download='CDW_accounts.json';
+        document.body.appendChild(a);a.click();document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    }else{
+      // GitHub not configured — download locally as before
+      var blob=new Blob([json],{type:'application/json'});
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a');
+      a.href=url;a.download='CDW_accounts.json';
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(totalAccounts.toLocaleString()+' accounts \u00b7 '+mapped.toLocaleString()+' mapped \u00b7 '+skipped.toLocaleString()+' unmapped \u00b7 Configure GitHub to push automatically','#8FA596');
+    }
   }catch(err){
     btn.classList.remove('loading');
     btn.textContent='Accounts';
