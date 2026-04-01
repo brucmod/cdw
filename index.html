@@ -430,10 +430,24 @@
 
         <div class="upd-actions">
           <button class="upd-cancel-btn" id="upd-cancel-btn">Cancel</button>
-          <button class="upd-push-btn" id="upd-push-btn" disabled>&#x2197; Apply Update</button>
+          <button class="upd-push-btn" id="upd-push-btn" disabled>&#x2197; Apply + Push to GitHub</button>
         </div>
         <div class="upd-push-status" id="upd-push-status"></div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── UPDATE PASSWORD GATE ── -->
+<div id="upd-gate-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:850;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px 32px;width:320px;max-width:90vw;box-shadow:0 24px 80px rgba(0,0,0,.5);animation:slideUp .2s ease;">
+    <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;">&#x1F512; Update Access</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Enter the update password to continue.</div>
+    <input type="password" id="upd-gate-input" placeholder="Password" autocomplete="current-password" style="width:100%;box-sizing:border-box;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;margin-bottom:12px;">
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button id="upd-gate-submit" style="padding:8px 18px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;font-weight:600;">Unlock</button>
+      <button id="upd-gate-cancel" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;">Cancel</button>
+      <div id="upd-gate-status" style="font-size:12px;color:#DEA193;"></div>
     </div>
   </div>
 </div>
@@ -1967,10 +1981,47 @@ function updOpen(){
 }
 function updClose(){document.getElementById('upd-modal-overlay').classList.remove('open');}
 
-document.getElementById('upd-btn').addEventListener('click',updOpen);
+document.getElementById('upd-btn').addEventListener('click',updGateOpen);
 document.getElementById('upd-modal-close').addEventListener('click',updClose);
 document.getElementById('upd-cancel-btn').addEventListener('click',updReset);
 document.getElementById('upd-modal-overlay').addEventListener('click',function(ev){if(ev.target===this)updClose();});
+
+// ── UPDATE PASSWORD GATE ───────────────────────────────────────────────────
+// Change UPD_PASSWORD below to set your own password.
+// Users only need to enter it once per browser session (sessionStorage).
+var UPD_PASSWORD='CDWupdate';
+
+function updGateOpen(){
+  if(sessionStorage.getItem('cdw_upd_auth')==='1'){updOpen();return;}
+  var ov=document.getElementById('upd-gate-overlay');
+  ov.style.display='flex';
+  document.getElementById('upd-gate-input').value='';
+  document.getElementById('upd-gate-status').textContent='';
+  setTimeout(function(){document.getElementById('upd-gate-input').focus();},50);
+}
+
+function updGateClose(){
+  document.getElementById('upd-gate-overlay').style.display='none';
+}
+
+document.getElementById('upd-gate-submit').addEventListener('click',function(){
+  var entered=document.getElementById('upd-gate-input').value;
+  var sts=document.getElementById('upd-gate-status');
+  if(entered===UPD_PASSWORD){
+    sessionStorage.setItem('cdw_upd_auth','1');
+    updGateClose();
+    updOpen();
+  }else{
+    sts.textContent='\u26a0\ufe0f Incorrect password';
+    document.getElementById('upd-gate-input').select();
+  }
+});
+
+document.getElementById('upd-gate-cancel').addEventListener('click',updGateClose);
+
+document.getElementById('upd-gate-input').addEventListener('keydown',function(e){
+  if(e.key==='Enter')document.getElementById('upd-gate-submit').click();
+});
 
 var updDrop=document.getElementById('upd-drop');
 updDrop.addEventListener('click',function(){document.getElementById('upd-file').click();});

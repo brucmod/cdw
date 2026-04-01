@@ -1,0 +1,36 @@
+[Unit]
+Description=CDW Directory API
+Documentation=https://github.com/your-org/cdw
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+
+# Directory where server.py lives
+WorkingDirectory=/opt/cdw-api
+
+# ── Secrets ──────────────────────────────────────────────────────────────────
+# Set CDW_API_KEY to a strong random string, e.g.:
+#   python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+# Do NOT commit this file with a real key.
+Environment=CDW_API_KEY=CHANGE_ME_TO_A_STRONG_SECRET
+Environment=CDW_DATA_DIR=/var/www/html/cdw
+
+# ── Process ───────────────────────────────────────────────────────────────────
+ExecStart=/opt/cdw-api/venv/bin/uvicorn server:app \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --workers 1
+
+Restart=on-failure
+RestartSec=5
+
+# Basic hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+
