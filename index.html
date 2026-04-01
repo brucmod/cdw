@@ -1,0 +1,2545 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>CDW Org Directory</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+  :root { --bg:#2D2A27; --surface:#3a3631; --surface2:#46423d; --border:#71584C; --accent:#FF7023; --accent2:#C5E4CC; --accent3:#8FA596; --accent4:#BD673D; --text:#FFF5E3; --muted:#D0C8BA; --tag-bg:#46423d; --card-hover:#504b46; --shadow-card:0 2px 8px rgba(0,0,0,.18); --glow-accent:rgba(255,112,35,.15); }
+  :root[data-theme="light"] { --bg:#F5F0E8; --surface:#FFFFFF; --surface2:#EDE8DF; --border:#D0C8BA; --accent:#D4581A; --accent2:#3A6B45; --accent3:#5A7D65; --accent4:#A0522D; --text:#2D2A27; --muted:#71584C; --tag-bg:#EDE8DF; --card-hover:#E8E2D8; --shadow-card:0 2px 12px rgba(0,0,0,.08); --glow-accent:rgba(212,88,26,.1); }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; min-height:100vh; }
+  header { background:linear-gradient(135deg,#252220 0%,#2D2A27 60%,#252220 100%); border-bottom:1px solid var(--border); padding:22px 40px 18px; display:flex; align-items:center; gap:16px; flex-wrap:nowrap; position:sticky; top:0; z-index:100; backdrop-filter:blur(12px); }
+  .header-right { display:flex; align-items:center; gap:10px; margin-left:auto; flex-shrink:0; }
+  .version-badge { display:inline-block; font-family:'DM Mono',monospace; font-size:10px; font-weight:500; letter-spacing:.06em; color:var(--accent); background:rgba(255,112,35,.12); border:1px solid rgba(255,112,35,.3); border-radius:20px; padding:2px 8px; vertical-align:middle; margin-left:8px; position:relative; top:-2px; }
+  header h1 { font-family:'DM Serif Display',serif; font-size:24px; font-weight:400; letter-spacing:-.3px; line-height:1; }
+  header h1 em { font-style:italic; color:var(--accent2); }
+  .header-meta { font-size:11px; color:var(--muted); margin-top:3px; }
+  .org-selector { display:flex; gap:6px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:5px; }
+  .org-btn { background:none; border:none; color:var(--muted); cursor:pointer; border-radius:7px; padding:9px 20px; font-family:'DM Mono',monospace; font-size:12px; letter-spacing:.08em; text-transform:uppercase; transition:all .15s; white-space:nowrap; font-weight:500; }
+  .org-btn:hover { color:var(--text); background:rgba(255,255,255,.06); }
+  .org-btn[data-org="cdw"]    { background:#2D2A27; color:var(--muted); }
+  .org-btn[data-org="dcs"]    { background:#252B24; color:var(--muted); }
+  .org-btn[data-org="canada"] { background:#2B2220; color:var(--muted); }
+  .org-btn.active[data-org="cdw"]    { background:#2D2A27; color:#FF7023; }
+  .org-btn.active[data-org="dcs"]    { background:#252B24; color:#FF7023; }
+  .org-btn.active[data-org="canada"] { background:#2B2220; color:#FF7023; }
+  .org-btn:disabled { opacity:.4; cursor:default; }
+  .upd-btn { display:flex; align-items:center; gap:7px; background:none; border:1px solid var(--border); border-radius:7px; color:var(--muted); cursor:pointer; padding:8px 14px; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.07em; text-transform:uppercase; transition:all .15s; white-space:nowrap; }
+  .upd-btn:hover { border-color:var(--accent3); color:var(--accent3); }
+  .smit-btn { display:none; align-items:center; gap:6px; background:none; border:1px solid var(--border); border-radius:6px; color:var(--muted); cursor:pointer; padding:5px 10px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.07em; text-transform:uppercase; transition:all .15s; white-space:nowrap; }
+  .smit-btn:hover { border-color:var(--accent4); color:var(--accent4); }
+  .smit-btn.active { border-color:var(--accent4); color:var(--accent4); background:rgba(189,103,61,.1); }
+  .upd-btn.loading { opacity:.5; cursor:wait; }
+  .upd-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:800; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
+  .upd-modal-overlay.open { display:flex; }
+  .upd-modal { background:var(--surface); border:1px solid var(--border); border-radius:14px; width:100%; max-width:600px; min-height:320px; max-height:88vh; display:flex; flex-direction:column; box-shadow:0 24px 80px rgba(0,0,0,.5); animation:slideUp .2s ease; }
+  .upd-modal::before { content:''; display:block; width:32px; height:3px; background:var(--border); border-radius:2px; margin:10px auto 0; }
+  .upd-modal-header { padding:14px 22px 14px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:12px; flex-shrink:0; }
+  .upd-modal-title { font-family:'DM Serif Display',serif; font-size:18px; font-weight:400; }
+  .upd-modal-meta { font-size:11px; color:var(--muted); margin-top:3px; }
+  .upd-modal-close { margin-left:auto; background:none; border:1px solid var(--border); border-radius:6px; color:var(--muted); cursor:pointer; padding:4px 9px; font-size:15px; line-height:1; transition:all .15s; flex-shrink:0; }
+  .upd-modal-close:hover { border-color:var(--text); color:var(--text); }
+  .upd-modal-body { padding:20px 22px; overflow-y:auto; flex:1; min-height:200px; }
+  .upd-drop { border:2px dashed var(--border); border-radius:10px; padding:36px 20px; min-height:140px; text-align:center; cursor:pointer; transition:all .2s; margin-bottom:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .upd-drop:hover, .upd-drop.dragover { border-color:var(--accent); background:rgba(255,112,35,.06); }
+  .upd-drop-icon { font-size:28px; margin-bottom:8px; opacity:.6; }
+  .upd-drop p { font-size:12px; color:var(--muted); margin:4px 0; }
+  .upd-drop .upd-drop-hint { font-size:11px; color:var(--muted); opacity:.7; }
+  .upd-progress { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:18px 20px; margin-bottom:14px; display:none; }
+  .upd-progress p { font-size:12px; color:var(--muted); margin:0 0 12px 0; font-family:'DM Mono',monospace; letter-spacing:.04em; }
+  .upd-prog-wrap { height:8px; background:var(--bg); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+  .upd-prog-bar { height:100%; background:linear-gradient(90deg,var(--accent4),var(--accent)); border-radius:6px; width:0%; transition:width .35s ease; box-shadow:0 0 8px rgba(255,112,35,.4); }
+  .upd-prog-pct { font-family:'DM Mono',monospace; font-size:11px; color:var(--accent); text-align:right; margin-top:6px; }
+  .upd-summary { display:none; margin-bottom:14px; }
+  .upd-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:14px; }
+  .upd-stat { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; text-align:center; }
+  .upd-stat .sv { font-family:'DM Mono',monospace; font-size:22px; font-weight:500; }
+  .upd-stat .sl { font-size:10px; color:var(--muted); margin-top:3px; text-transform:uppercase; letter-spacing:.06em; }
+  .upd-stat.changed .sv { color:#DEA193; }
+  .upd-stat.added   .sv { color:var(--accent3); }
+  .upd-stat.removed .sv { color:var(--accent4); }
+  .upd-preview { max-height:200px; overflow-y:auto; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-bottom:14px; }
+  .upd-preview table { width:100%; border-collapse:collapse; }
+  .upd-preview th { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); padding:8px 14px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface2); font-family:'DM Mono',monospace; }
+  .upd-preview td { padding:7px 14px; border-bottom:1px solid var(--border); font-size:11px; }
+  .upd-preview tr:last-child td { border-bottom:none; }
+  .upd-note { font-size:11px; color:var(--muted); margin-bottom:12px; line-height:1.5; }
+  .upd-actions { display:flex; gap:8px; justify-content:flex-end; }
+  .upd-cancel-btn { padding:8px 16px; border-radius:7px; font-size:13px; font-weight:500; border:1px solid var(--border); background:var(--surface2); color:var(--muted); cursor:pointer; font-family:'DM Mono',monospace; letter-spacing:.04em; transition:all .15s; }
+  .upd-cancel-btn:hover { border-color:var(--text); color:var(--text); }
+  .upd-push-btn { padding:8px 18px; border-radius:7px; font-size:13px; font-weight:500; border:1px solid var(--accent3); background:var(--accent3); color:#1a2419; cursor:pointer; font-family:'DM Mono',monospace; letter-spacing:.04em; transition:all .15s; }
+  .upd-push-btn:hover:not(:disabled) { background:#7ab88a; border-color:#7ab88a; }
+  .upd-push-btn:disabled { opacity:.4; cursor:not-allowed; }
+  .gh-settings { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px 16px; margin-bottom:14px; }
+  .gh-settings-title { font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:10px; display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; }
+  .gh-settings-title span { margin-left:auto; font-size:14px; transition:transform .2s; }
+  .gh-settings-body { display:none; }
+  .gh-settings-body.open { display:block; }
+  .gh-field { margin-bottom:10px; }
+  .gh-field label { display:block; font-size:10px; font-family:'DM Mono',monospace; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+  .gh-field input { width:100%; box-sizing:border-box; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:7px 10px; font-size:12px; color:var(--text); font-family:'DM Mono',monospace; outline:none; transition:border-color .15s; }
+  .gh-field input:focus { border-color:var(--accent3); }
+  .gh-field input::placeholder { color:var(--muted); opacity:.5; }
+  .gh-save-btn { padding:5px 12px; border-radius:6px; font-size:11px; border:1px solid var(--accent3); background:none; color:var(--accent3); cursor:pointer; font-family:'DM Mono',monospace; letter-spacing:.04em; transition:all .15s; }
+  .gh-save-btn:hover { background:var(--accent3); color:#1a2419; }
+  .gh-status { font-size:11px; font-family:'DM Mono',monospace; margin-top:8px; min-height:16px; }
+  .upd-push-status { font-size:11px; font-family:'DM Mono',monospace; margin-top:6px; min-height:16px; text-align:center; }
+  .search-wrap { flex:1; min-width:180px; position:relative; }
+  .search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+  #search { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; padding:9px 12px 9px 38px; outline:none; transition:border-color .2s; }
+  #search:focus { border-color:var(--accent); }
+  #search::placeholder { color:var(--muted); }
+  .acct-search-container { background:var(--surface); border-bottom:1px solid var(--border); padding:8px 40px 12px; display:none; }
+  .acct-search-wrap { position:relative; max-width:400px; }
+  #acct-search { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; padding:9px 12px; outline:none; transition:border-color .2s; }
+  #acct-search:focus { border-color:var(--accent3); }
+  #acct-search::placeholder { color:var(--muted); }
+  .filters { padding:12px 40px; display:flex; gap:8px; flex-wrap:wrap; border-bottom:1px solid var(--border); align-items:center; background:var(--surface); position:sticky; top:68px; z-index:90; backdrop-filter:blur(12px); transition:top .2s; }
+  .filter-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-right:2px; white-space:nowrap; }
+  select { background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:12px; padding:6px 26px 6px 10px; cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23D0C8BA' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 8px center; outline:none; transition:border-color .2s; }
+  select:focus { border-color:var(--accent); }
+  #filter-container { display:flex; gap:8px; flex-wrap:wrap; align-items:center; flex:1; }
+  .count-badge { margin-left:auto; font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:4px 12px; white-space:nowrap; }
+  .count-badge span { color:var(--accent); font-weight:500; }
+  .clear-btn { background:none; border:1px solid var(--border); border-radius:6px; color:var(--muted); cursor:pointer; padding:6px 10px; font-size:11px; font-family:'DM Mono',monospace; transition:all .15s; white-space:nowrap; }
+  .clear-btn:hover { border-color:var(--accent4); color:var(--accent4); }
+  .view-toggle { display:flex; gap:4px; background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:3px; }
+  .view-btn { background:none; border:none; color:var(--muted); cursor:pointer; border-radius:5px; padding:5px 8px; display:flex; align-items:center; transition:all .15s; }
+  .view-btn.active { background:var(--accent); color:white; }
+  #app { padding:28px 40px; }
+  #app.map-mode { padding:0; height:calc(100vh - 130px); display:flex; flex-direction:column; }
+  #app.map-mode .map-shell { flex:1; height:auto; min-height:0; border-radius:0; border:none; border-top:1px solid var(--border); }
+  .table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:10px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  thead { background:var(--surface2); }
+  th { padding:11px 14px; text-align:left; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:500; cursor:pointer; user-select:none; white-space:nowrap; border-bottom:1px solid var(--border); transition:color .15s; }
+  th:hover { color:var(--text); }
+  th.sorted { color:#C5E4CC; }
+  th .sort-icon { margin-left:4px; opacity:.5; }
+  th.sorted .sort-icon { opacity:1; }
+  tbody tr { border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s; }
+  tbody tr:last-child { border-bottom:none; }
+  tbody tr:hover { background:var(--card-hover); }
+  td { padding:10px 14px; color:var(--text); vertical-align:middle; }
+  .name-cell strong { display:block; font-weight:500; }
+  .name-cell small { color:var(--muted); font-size:11px; font-family:'DM Mono',monospace; }
+  .email-link { color:var(--accent); text-decoration:none; font-family:'DM Mono',monospace; font-size:11px; }
+  .email-link:hover { text-decoration:underline; }
+  .tag { background:var(--tag-bg); border:1px solid var(--border); border-radius:4px; padding:2px 7px; font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; display:inline-block; }
+  .tag.seg  { color:#F2CDC4; border-color:rgba(149,104,93,.5); background:rgba(149,104,93,.2); }
+  .tag.ch   { color:#C5E4CC; border-color:rgba(143,165,150,.5); background:rgba(143,165,150,.15); }
+  .tag.sol  { color:#C5E4CC; border-color:rgba(143,165,150,.5); background:rgba(143,165,150,.15); }
+  .tag.tier { color:#DEA193; border-color:rgba(222,161,147,.4); background:rgba(222,161,147,.12); }
+  .tag.prov { color:#C5E4CC; border-color:rgba(143,165,150,.5); background:rgba(143,165,150,.15); }
+  .tag.role-AM   { color:#F2CDC4; border-color:rgba(149,104,93,.5); background:rgba(149,104,93,.2); }
+  .tag.role-Mgr  { color:#C5E4CC; border-color:rgba(143,165,150,.5); background:rgba(143,165,150,.15); }
+  .tag.role-FAE  { color:#DEA193; border-color:rgba(222,161,147,.4); background:rgba(222,161,147,.12); }
+  .tag.role-ATAE { color:#D0C8BA; border-color:rgba(208,200,186,.3); background:rgba(208,200,186,.08); }
+  .tag.role-MDC  { color:#8FA596; border-color:rgba(143,165,150,.4); background:rgba(143,165,150,.12); }
+  .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:14px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; cursor:pointer; transition:border-color .15s,transform .15s,background .15s,box-shadow .2s; box-shadow:var(--shadow-card); }
+  .card:hover { border-color:var(--accent); background:var(--card-hover); transform:translateY(-2px); box-shadow:0 4px 20px var(--glow-accent),0 2px 8px rgba(0,0,0,.15); }
+  .card-header { display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; }
+  .avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'DM Serif Display',serif; font-size:14px; color:white; flex-shrink:0; font-style:italic; box-shadow:0 2px 8px rgba(0,0,0,.25); }
+  .card-name { font-weight:500; font-size:14px; line-height:1.3; }
+  .card-subtitle { color:var(--muted); font-size:11px; margin-top:2px; }
+  .card-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; }
+  .card-footer { display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid var(--border); }
+  .card-mgr { font-size:11px; color:var(--muted); }
+  .card-mgr strong { color:var(--text); font-weight:400; }
+  .org-block { margin-bottom:28px; }
+  .org-manager-card { background:var(--surface); border:1px solid var(--accent); border-radius:10px; padding:18px; cursor:pointer; transition:border-color .15s,transform .15s,background .15s; position:relative; }
+  .org-manager-card:hover { background:var(--card-hover); transform:translateY(-1px); }
+  .org-manager-label { font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:.1em; color:var(--accent); margin-bottom:8px; }
+  .org-reports { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:10px; margin-top:10px; margin-left:24px; padding-left:16px; border-left:2px solid var(--border); }
+  .org-report-card { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px; cursor:pointer; transition:border-color .15s,background .15s,box-shadow .2s,border-left-width .1s; }
+  .org-report-card:hover { border-color:var(--accent); border-left:3px solid var(--accent); background:var(--card-hover); box-shadow:0 2px 12px var(--glow-accent); }
+  .org-solo-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:14px; margin-bottom:28px; }
+  .org-section-label { font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:12px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+  .acct-card { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent3); border-radius:10px; padding:18px; cursor:pointer; transition:border-color .15s,transform .15s,background .15s,box-shadow .2s; box-shadow:var(--shadow-card); }
+  .acct-card:hover { border-color:var(--accent3); background:var(--card-hover); transform:translateY(-2px); box-shadow:0 4px 20px rgba(143,165,150,.3),0 2px 8px rgba(0,0,0,.15); }
+  .acct-card-header { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .acct-card-icon { width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#8FA596cc,#8FA59655); color:white; flex-shrink:0; }
+  .acct-card-name { font-weight:500; font-size:14px; line-height:1.3; color:var(--text); }
+  .acct-card-meta { font-size:11px; color:var(--muted); margin-top:4px; }
+  .acct-card-footer { display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding-top:10px; border-top:1px solid var(--border); }
+  .acct-card-mgr { font-size:11px; color:var(--muted); }
+  .group-section { margin-bottom:28px; }
+  .group-header { display:flex; align-items:center; gap:12px; padding:12px 18px; background:var(--surface2); border:1px solid var(--border); border-radius:8px 8px 0 0; cursor:pointer; user-select:none; }
+  .group-header:hover { background:var(--card-hover); }
+  .group-name { font-weight:500; font-size:14px; }
+  .group-count { margin-left:auto; font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); background:var(--bg); border:1px solid var(--border); border-radius:20px; padding:2px 10px; }
+  .group-chevron { color:var(--muted); transition:transform .2s; flex-shrink:0; }
+  .group-header.collapsed .group-chevron { transform:rotate(-90deg); }
+  .group-rows { border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; overflow:hidden; }
+  .map-shell { display:flex; height:calc(100vh - 180px); min-height:500px; border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  #map-container { flex:1; min-width:0; position:relative; background:#1e1b18; }
+  #leaflet-map { width:100%; height:100%; }
+  .leaflet-container { background:#1e1b18 !important; }
+  .leaflet-tile { filter:brightness(0.55) saturate(0.4) hue-rotate(10deg); }
+  .leaflet-control-zoom a { background:var(--surface2) !important; color:var(--text) !important; border-color:var(--border) !important; }
+  .leaflet-control-attribution { background:rgba(45,42,39,.85) !important; color:var(--muted) !important; font-size:9px !important; }
+  .map-marker { display:flex; align-items:center; justify-content:center; border-radius:50%; border:2px solid rgba(255,255,255,.25); font-family:'DM Mono',monospace; font-weight:500; color:white; cursor:pointer; box-shadow:0 2px 12px rgba(0,0,0,.5); transition:transform .15s; }
+  .map-marker:hover { transform:scale(1.12); }
+  .map-marker.active { border-color:white; border-width:3px; transform:scale(1.15); box-shadow:0 4px 24px rgba(255,112,35,.6); }
+  .map-panel { width:340px; flex-shrink:0; background:var(--surface); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+  .map-panel-header { padding:16px 18px 12px; border-bottom:1px solid var(--border); background:var(--surface2); flex-shrink:0; }
+  .map-panel-title { font-family:'DM Serif Display',serif; font-size:16px; font-weight:400; margin-bottom:3px; }
+  .map-panel-sub { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:.08em; text-transform:uppercase; }
+  .map-panel-filters { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:7px; flex-shrink:0; }
+  .map-panel-search { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:12px; padding:7px 10px; outline:none; font-family:'DM Sans',sans-serif; }
+  .map-panel-search:focus { border-color:var(--accent); }
+  .map-panel-search::placeholder { color:var(--muted); }
+  .map-panel-selects { display:flex; gap:6px; }
+  .map-panel-selects select { flex:1; font-size:11px; padding:5px 20px 5px 8px; }
+  .map-panel-list { flex:1; overflow-y:auto; }
+  .map-loc-header { display:flex; align-items:center; gap:8px; padding:9px 14px 7px; background:var(--surface2); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:2; cursor:pointer; }
+  .map-loc-header:hover { background:var(--card-hover); }
+  .map-loc-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .map-loc-name { font-size:12px; font-weight:500; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .map-loc-prov { font-family:'DM Mono',monospace; font-size:9px; color:#C5E4CC; background:rgba(143,165,150,.15); border:1px solid rgba(143,165,150,.3); border-radius:4px; padding:1px 5px; }
+  .map-loc-count { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:1px 7px; }
+  .map-person-row { display:flex; align-items:center; gap:10px; padding:7px 14px 7px 26px; border-bottom:1px solid rgba(113,88,76,.3); cursor:pointer; transition:background .1s; }
+  .map-person-row:hover { background:var(--card-hover); }
+  .map-person-info { flex:1; min-width:0; }
+  .map-person-name { font-size:12px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .map-person-role { font-size:10px; color:var(--muted); }
+  .map-stats { position:absolute; top:12px; right:12px; z-index:500; background:rgba(45,42,39,.92); border:1px solid var(--border); border-radius:8px; padding:10px 13px; backdrop-filter:blur(8px); min-width:150px; }
+  .map-stats-title { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
+  .map-stat-row { display:flex; align-items:center; gap:10px; margin-bottom:5px; }
+  .map-stat-label { font-family:'DM Mono',monospace; color:var(--muted); min-width:28px; font-size:10px; }
+  .map-stat-bar-wrap { flex:1; height:4px; background:rgba(255,255,255,.08); border-radius:2px; overflow:hidden; }
+  .map-stat-bar { height:100%; border-radius:2px; }
+  .map-stat-num { font-family:'DM Mono',monospace; color:var(--text); min-width:22px; text-align:right; font-size:10px; }
+  .map-legend { position:absolute; bottom:16px; left:14px; z-index:500; background:rgba(45,42,39,.92); border:1px solid var(--border); border-radius:8px; padding:10px 13px; backdrop-filter:blur(8px); }
+  .map-legend-title { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
+  .map-legend-item { display:flex; align-items:center; gap:7px; font-size:11px; color:var(--text); margin-bottom:4px; }
+  .map-legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; border:1px solid rgba(255,255,255,.2); }
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:400; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:14px; width:100%; max-width:600px; max-height:90vh; overflow-y:auto; animation:slideUp .2s ease; }
+  .modal::before { content:""; display:block; width:36px; height:4px; background:var(--border); border-radius:2px; margin:10px auto 0; }
+  @keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .modal-header { padding:14px 24px 16px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:14px; }
+  .modal-name { font-family:'DM Serif Display',serif; font-size:20px; font-weight:400; }
+  .modal-title-text { color:var(--muted); font-size:12px; margin-top:3px; }
+  .modal-close { margin-left:auto; background:none; border:1px solid var(--border); border-radius:6px; color:var(--muted); cursor:pointer; padding:5px 10px; font-size:16px; line-height:1; transition:all .15s; flex-shrink:0; }
+  .modal-close:hover { border-color:var(--text); color:var(--text); }
+  .modal-body { padding:20px 24px; }
+  .detail-section { margin-bottom:18px; }
+  .detail-section-title { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.15em; text-transform:uppercase; color:#C5E4CC; margin-bottom:10px; padding-bottom:5px; border-bottom:1px solid var(--border); }
+  .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .detail-item.full { grid-column:1/-1; }
+  .detail-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:3px; }
+  .detail-value { font-size:13px; color:var(--text); }
+  .detail-value a { color:var(--accent); text-decoration:none; }
+  .detail-value a:hover { text-decoration:underline; }
+  .chain-row { display:flex; align-items:center; gap:10px; padding:9px 12px; background:var(--surface2); border-radius:8px; margin-bottom:7px; }
+  .chain-label { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; min-width:52px; }
+  .chain-name { font-size:13px; font-weight:500; }
+  .chain-sub { font-size:11px; color:var(--muted); }
+  .toast { position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:11px 18px; font-size:13px; color:var(--text); display:flex; align-items:center; gap:10px; z-index:500; opacity:0; transition:opacity .25s,transform .25s; pointer-events:none; box-shadow:0 8px 32px rgba(0,0,0,.4); }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  .empty { text-align:center; padding:80px 20px; color:var(--muted); }
+  .empty svg { margin-bottom:16px; opacity:.3; }
+  .empty p { font-size:15px; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+  :root[data-theme="light"] .leaflet-tile { filter:none; }
+  :root[data-theme="light"] .leaflet-container { background:#e8e0d4 !important; }
+  :root[data-theme="light"] .org-btn[data-org="cdw"] { background:#EDE8DF; }
+  :root[data-theme="light"] .org-btn[data-org="dcs"] { background:#E4EBE3; }
+  :root[data-theme="light"] .org-btn[data-org="canada"] { background:#EBE2DF; }
+  :root[data-theme="light"] .org-btn.active[data-org="cdw"] { background:#EDE8DF; color:#D4581A; }
+  :root[data-theme="light"] .org-btn.active[data-org="dcs"] { background:#E4EBE3; color:#D4581A; }
+  :root[data-theme="light"] .org-btn.active[data-org="canada"] { background:#EBE2DF; color:#D4581A; }
+  :root[data-theme="light"] .map-marker { box-shadow:0 2px 12px rgba(0,0,0,.25); }
+  :root[data-theme="light"] .map-stats, :root[data-theme="light"] .map-legend { background:rgba(255,255,255,.92); }
+  :root[data-theme="light"] header { background:linear-gradient(135deg,#EDE8DF 0%,#F5F0E8 60%,#EDE8DF 100%); }
+  /* Light theme tag overrides — boost text contrast */
+  :root[data-theme="light"] .tag { color:#5a4e46; background:rgba(208,200,186,.18); border-color:rgba(113,88,76,.25); }
+  :root[data-theme="light"] .tag.seg { color:#7a3228; background:rgba(149,104,93,.12); border-color:rgba(149,104,93,.35); }
+  :root[data-theme="light"] .tag.ch { color:#2d5438; background:rgba(90,125,101,.1); border-color:rgba(90,125,101,.3); }
+  :root[data-theme="light"] .tag.sol { color:#2d5438; background:rgba(90,125,101,.1); border-color:rgba(90,125,101,.3); }
+  :root[data-theme="light"] .tag.tier { color:#8b3a2a; background:rgba(222,161,147,.12); border-color:rgba(189,103,61,.3); }
+  :root[data-theme="light"] .tag.prov { color:#2d5438; background:rgba(90,125,101,.1); border-color:rgba(90,125,101,.3); }
+  :root[data-theme="light"] .tag.role-AM { color:#7a3228; background:rgba(149,104,93,.12); border-color:rgba(149,104,93,.35); }
+  :root[data-theme="light"] .tag.role-Mgr { color:#2d5438; background:rgba(90,125,101,.1); border-color:rgba(90,125,101,.3); }
+  :root[data-theme="light"] .tag.role-FAE { color:#8b3a2a; background:rgba(222,161,147,.12); border-color:rgba(189,103,61,.3); }
+  :root[data-theme="light"] .tag.role-ATAE { color:#5a4e46; background:rgba(208,200,186,.15); border-color:rgba(113,88,76,.25); }
+  :root[data-theme="light"] .tag.role-MDC { color:#2d5438; background:rgba(90,125,101,.12); border-color:rgba(90,125,101,.3); }
+  :root[data-theme="light"] .vtree-badge { color:#a0522d; background:rgba(212,88,26,.08); border-color:rgba(212,88,26,.25); }
+  /* Theme toggle button */
+  .theme-btn { display:flex; align-items:center; justify-content:center; background:none; border:1px solid var(--border); border-radius:7px; color:var(--muted); cursor:pointer; padding:7px 9px; transition:all .15s; }
+  .theme-btn:hover { border-color:var(--accent); color:var(--accent); }
+  /* Org tree styles — hybrid layout */
+  .tree-container { padding:28px 40px; }
+  .tree-section { margin-bottom:28px; }
+  .tree-root-card { background:var(--surface); border:1px solid var(--accent); border-radius:10px; padding:16px 20px; cursor:pointer; transition:all .15s; box-shadow:var(--shadow-card); margin-bottom:12px; }
+  .tree-root-card:hover { background:var(--card-hover); transform:translateY(-1px); box-shadow:0 4px 16px var(--glow-accent); }
+  .tree-l1-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:10px; margin-left:24px; padding-left:16px; border-left:2px solid var(--border); margin-bottom:8px; }
+  .tree-l1-block { display:flex; flex-direction:column; }
+  .tree-l1-card { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; cursor:pointer; transition:all .15s; }
+  .tree-l1-card:hover { border-color:var(--accent); background:var(--card-hover); }
+  .tree-l1-expand-row { padding:4px 0; }
+  .tree-l1-expand { display:inline-flex; align-items:center; gap:4px; padding:4px 12px; border-radius:6px; background:var(--surface2); border:1px solid var(--border); color:var(--muted); font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.04em; cursor:pointer; transition:all .15s; user-select:none; }
+  .tree-l1-expand:hover { border-color:var(--accent); color:var(--accent); background:var(--card-hover); }
+  .vtree-list { margin-top:6px; margin-bottom:4px; border-left:2px solid var(--border); margin-left:10px; padding-left:0; }
+  .vtree-row { }
+  .vtree-node { display:flex; align-items:center; gap:8px; padding:6px 12px; border-radius:6px; cursor:pointer; transition:background .1s; }
+  .vtree-node:hover { background:var(--card-hover); }
+  .vtree-toggle { width:16px; height:16px; flex-shrink:0; text-align:center; font-size:11px; color:var(--muted); cursor:pointer; line-height:16px; border-radius:3px; transition:all .1s; }
+  .vtree-toggle:hover { color:var(--accent); background:var(--surface2); }
+  .vtree-toggle-spacer { width:16px; flex-shrink:0; }
+  .vtree-info { flex:1; min-width:0; }
+  .vtree-name { font-size:12px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .vtree-sub { font-size:10px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .vtree-badge { display:inline-block; font-family:'DM Mono',monospace; font-size:9px; color:var(--accent); background:rgba(255,112,35,.1); border:1px solid rgba(255,112,35,.25); border-radius:8px; padding:0 5px; margin-left:4px; vertical-align:middle; }
+  .vtree-children { margin-left:12px; border-left:1px solid var(--border); }
+  /* Account badge on cards */
+  .acct-badge { display:inline-flex; align-items:center; gap:4px; font-family:'DM Mono',monospace; font-size:9px; color:var(--accent); background:rgba(255,112,35,.08); border:1px solid rgba(255,112,35,.2); border-radius:10px; padding:1px 7px; }
+  :root[data-theme="light"] .acct-badge { color:#a0522d; background:rgba(212,88,26,.06); border-color:rgba(212,88,26,.2); }
+  /* Account table in modal */
+  .acct-section { margin-top:4px; }
+  .acct-table-wrap { max-height:280px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; margin-top:8px; }
+  .acct-table { width:100%; border-collapse:collapse; font-size:11px; }
+  .acct-table thead { background:var(--surface2); position:sticky; top:0; z-index:1; }
+  .acct-table th { padding:7px 10px; text-align:left; font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:500; border-bottom:1px solid var(--border); cursor:pointer; user-select:none; white-space:nowrap; }
+  .acct-table th:hover { color:var(--text); }
+  .acct-table td { padding:6px 10px; border-bottom:1px solid var(--border); color:var(--text); }
+  .acct-table tr:last-child td { border-bottom:none; }
+  .acct-table tr:hover td { background:var(--card-hover); }
+  .acct-t12 { font-family:'DM Mono',monospace; font-size:10px; text-align:right; }
+  @media(max-width:900px){ header{padding:16px 24px;gap:14px} .filters{padding:10px 24px} #app{padding:20px 24px} .map-shell{flex-direction:column;height:auto} .map-panel{width:100%;border-left:none;border-top:1px solid var(--border);max-height:340px} #map-container{height:340px} }
+  @media(max-width:640px){ header{padding:14px 16px;flex-direction:column;align-items:stretch;gap:10px} .org-selector{justify-content:center} .search-wrap{max-width:100%} .filters{padding:9px 14px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none} .filters::-webkit-scrollbar{display:none} .filter-label{display:none} #app{padding:12px 14px} .detail-grid{grid-template-columns:1fr} .modal-overlay{padding:0;align-items:flex-end} .modal{max-width:100%;border-radius:16px 16px 0 0;max-height:88vh} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">
+    <div class="header-eyebrow" id="header-eyebrow">CDW &middot; Sales Organization</div>
+    <h1 id="header-h1">CDW Org <em>Directory</em><span class="version-badge" id="version-badge">v1.0</span></h1>
+    <div class="header-meta" id="header-meta">Loading&hellip;</div>
+  </div>
+  <div class="org-selector">
+    <button class="org-btn active" data-org="cdw">CDW</button>
+    <button class="org-btn" data-org="dcs">DCS</button>
+    <button class="org-btn" data-org="canada">Canada</button>
+  </div>
+  <div class="search-wrap">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="search" placeholder="Search&hellip;">
+  </div>
+  <div class="header-right">
+    <button class="upd-btn" id="upd-btn" title="Update data for current org">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Update Data
+    </button>
+    <button class="upd-btn" id="acct-btn" title="Upload account mapping (CDW only)" style="display:none">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Accounts
+    </button>
+    <input type="file" id="acct-file" accept=".xlsx,.xls" style="display:none">
+    <button class="theme-btn" id="theme-toggle" title="Toggle light/dark theme">
+      <svg id="theme-icon-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg id="theme-icon-light" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ── ACCOUNT SEARCH BAR (below header) ── -->
+<div class="acct-search-container" id="acct-search-container">
+  <div class="acct-search-wrap">
+    <input type="text" id="acct-search" placeholder="Search Accounts (press Enter)">
+  </div>
+</div>
+
+<!-- ── UPDATER MODAL ── -->
+<input type="file" id="upd-file" accept=".xlsx,.xls" style="display:none" multiple>
+<div class="upd-modal-overlay" id="upd-modal-overlay">
+  <div class="upd-modal">
+    <div class="upd-modal-header">
+      <div>
+        <div class="upd-modal-title">Update <em>Directory</em></div>
+        <div class="upd-modal-meta" id="upd-modal-meta">Loading new data for current org</div>
+      </div>
+      <button class="upd-modal-close" id="upd-modal-close">&#x2715;</button>
+    </div>
+    <div class="upd-modal-body">
+      <!-- Drop zone -->
+      <div id="upd-drop-step" style="display:block;">
+        <div id="upd-drop" style="border:2px dashed #71584C;border-radius:10px;padding:40px 20px;min-height:150px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;box-sizing:border-box;">
+          <div style="font-size:32px;line-height:1;">&#x1F4C2;</div>
+          <p style="margin:0;font-size:13px;color:#FFF5E3;"><strong>Click to browse</strong> or drag &amp; drop your XLSX here</p>
+          <p style="margin:0;font-size:11px;color:#D0C8BA;">CDW: single file &nbsp;·&nbsp; Canada: drop any combo — untouched roles are preserved</p>
+        </div>
+      </div>
+      <!-- Progress -->
+      <div id="upd-progress" style="display:none;background:#46423d;border:1px solid #71584C;border-radius:8px;padding:18px 20px;margin-bottom:14px;">
+        <p id="upd-progress-msg" style="margin:0 0 12px;font-size:12px;color:#D0C8BA;font-family:'DM Mono',monospace;">Reading file&hellip;</p>
+        <div style="height:8px;background:#2D2A27;border:1px solid #71584C;border-radius:6px;overflow:hidden;">
+          <div id="upd-prog-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#BD673D,#FF7023);border-radius:6px;transition:width .35s ease;"></div>
+        </div>
+        <div id="upd-prog-pct" style="font-family:'DM Mono',monospace;font-size:11px;color:#FF7023;text-align:right;margin-top:6px;">0%</div>
+      </div>
+      <!-- Summary -->
+      <div id="upd-summary" style="display:none;">
+        <div class="upd-stats" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+          <div class="upd-stat changed"><div class="sv" id="upd-stat-updated">0</div><div class="sl">Updated</div></div>
+          <div class="upd-stat added"><div class="sv" id="upd-stat-added">0</div><div class="sl">New People</div></div>
+          <div class="upd-stat removed"><div class="sv" id="upd-stat-removed">0</div><div class="sl">Removed</div></div>
+          <div class="upd-stat" style="border-color:rgba(208,200,186,.2);"><div class="sv" id="upd-stat-skipped" style="color:var(--muted);">0</div><div class="sl">Skipped</div></div>
+        </div>
+        <div class="upd-preview" id="upd-preview"></div>
+        <p class="upd-note">Changes are applied to the directory and pushed to GitHub Pages.</p>
+
+        <!-- GitHub Push Settings -->
+        <div class="gh-settings" id="gh-settings">
+          <div class="gh-settings-title" id="gh-settings-toggle">
+            &#x26A1; GitHub Settings
+            <span id="gh-chevron">&#x25BC;</span>
+          </div>
+          <div class="gh-settings-body" id="gh-settings-body">
+            <div class="gh-field">
+              <label>GitHub Username / Org</label>
+              <input type="text" id="gh-owner" placeholder="e.g. acme-corp" autocomplete="off">
+            </div>
+            <div class="gh-field">
+              <label>Repository Name</label>
+              <input type="text" id="gh-repo" placeholder="e.g. cdw-directory" autocomplete="off">
+            </div>
+            <div class="gh-field">
+              <label>Personal Access Token (PAT)</label>
+              <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <button class="gh-save-btn" id="gh-save-btn">Save Settings</button>
+              <div class="gh-status" id="gh-status"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="upd-actions">
+          <button class="upd-cancel-btn" id="upd-cancel-btn">Cancel</button>
+          <button class="upd-push-btn" id="upd-push-btn" disabled>&#x2197; Apply Update</button>
+        </div>
+        <div class="upd-push-status" id="upd-push-status"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SPLASH ── -->
+<div id="splash">
+  <div class="sp-bg"></div>
+  <div class="sp-grid"></div>
+  <div class="sp-content">
+    <div class="sp-eyebrow">CDW · Sales Organization</div>
+    <div class="sp-logo">
+      <span class="sp-cdw">CDW</span>
+      <span class="sp-org">Org <em>Directory</em></span>
+    </div>
+    <div class="sp-tagline">3 orgs · 3,500+ people · 1 directory</div>
+    <div class="sp-orbs">
+      <div class="sp-orb" style="--c:#FF7023;--d:0s;--x:-90px;--y:20px">CDW</div>
+      <div class="sp-orb" style="--c:#5A6359;--d:.15s;--x:0px;--y:-30px">DCS</div>
+      <div class="sp-orb" style="--c:#95685D;--d:.3s;--x:90px;--y:20px">CA</div>
+    </div>
+    <div class="sp-bar-wrap"><div class="sp-bar" id="sp-bar"></div></div>
+    <div class="sp-status" id="sp-status">Initializing&hellip;</div>
+  </div>
+  <div class="sp-footer" id="sp-footer">March 2026 &middot; v1.0</div>
+</div>
+
+<style>
+#splash{
+  position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);transition:opacity .6s ease, transform .6s ease;
+}
+#splash.sp-out{opacity:0;pointer-events:none;transform:scale(1.03)}
+
+.sp-bg{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 40%, rgba(255,112,35,.07) 0%, transparent 70%),
+             radial-gradient(ellipse 50% 40% at 20% 80%, rgba(90,99,89,.1) 0%, transparent 60%),
+             radial-gradient(ellipse 40% 35% at 80% 20%, rgba(149,104,93,.08) 0%, transparent 55%);
+}
+
+.sp-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(113,88,76,.08) 1px, transparent 1px),
+                   linear-gradient(90deg, rgba(113,88,76,.08) 1px, transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 80%);
+}
+
+.sp-content{
+  position:relative;text-align:center;display:flex;flex-direction:column;align-items:center;gap:0;
+}
+
+.sp-eyebrow{
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:18px;
+  animation:spFadeUp .6s ease both;animation-delay:.1s;
+}
+
+.sp-logo{
+  display:flex;align-items:baseline;gap:14px;margin-bottom:16px;
+  animation:spFadeUp .7s ease both;animation-delay:.2s;
+}
+.sp-cdw{
+  font-family:'DM Serif Display',serif;font-size:72px;font-weight:400;letter-spacing:-.5px;
+  color:var(--text);line-height:1;
+}
+.sp-org{
+  font-family:'DM Serif Display',serif;font-size:36px;font-weight:400;color:var(--muted);line-height:1;
+}
+.sp-org em{font-style:italic;color:var(--accent2)}
+
+.sp-tagline{
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;color:var(--muted);
+  margin-bottom:40px;
+  animation:spFadeUp .7s ease both;animation-delay:.3s;
+}
+
+.sp-orbs{
+  display:flex;gap:16px;margin-bottom:44px;
+  animation:spFadeUp .7s ease both;animation-delay:.4s;
+}
+.sp-orb{
+  width:64px;height:64px;border-radius:50%;
+  background:linear-gradient(135deg,var(--c)cc,var(--c)44);
+  border:1px solid var(--c);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;color:white;
+  animation:spOrb 2.4s ease-in-out infinite;animation-delay:var(--d);
+  box-shadow:0 0 24px var(--c)33;
+}
+@keyframes spOrb{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-8px)}
+}
+
+.sp-bar-wrap{
+  width:240px;height:2px;background:rgba(113,88,76,.3);border-radius:1px;margin-bottom:12px;overflow:hidden;
+  animation:spFadeUp .5s ease both;animation-delay:.5s;
+}
+.sp-bar{
+  height:100%;width:0%;background:linear-gradient(90deg,var(--accent4),var(--accent));
+  border-radius:1px;transition:width .5s ease;
+}
+
+.sp-status{
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  animation:spFadeUp .5s ease both;animation-delay:.55s;
+}
+
+.sp-footer{
+  position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
+  font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.12em;color:var(--text);opacity:.65;
+  white-space:nowrap;
+}
+
+:root[data-theme="light"] .sp-bg{
+  background:radial-gradient(ellipse 80% 60% at 50% 40%, rgba(255,112,35,.06) 0%, transparent 70%),
+             radial-gradient(ellipse 50% 40% at 20% 80%, rgba(90,99,89,.08) 0%, transparent 60%),
+             radial-gradient(ellipse 40% 35% at 80% 20%, rgba(149,104,93,.06) 0%, transparent 55%);
+}
+:root[data-theme="light"] .sp-grid{
+  background-image:linear-gradient(rgba(113,88,76,.06) 1px, transparent 1px),
+                   linear-gradient(90deg, rgba(113,88,76,.06) 1px, transparent 1px);
+}
+:root[data-theme="light"] .sp-orb{ color:#2D2A27; font-weight:500; text-shadow:none; background:linear-gradient(135deg,var(--c)55,var(--c)22); border:2px solid var(--c); }
+:root[data-theme="light"] .sp-bar-wrap{ background:rgba(113,88,76,.15); }
+
+@keyframes spFadeUp{
+  from{opacity:0;transform:translateY(14px)}
+  to{opacity:1;transform:translateY(0)}
+}
+</style>
+
+<div id="loading-screen" style="display:none"></div>
+
+
+<div id="app-shell" style="display:none">
+  <div class="filters">
+    <span class="filter-label">Filter</span>
+    <div id="filter-container"></div>
+    <button class="smit-btn" id="smit-btn" onclick="toggleSMIT()" title="Sales Managers in Training">SMIT</button>
+    <div class="view-toggle">
+      <button class="view-btn" id="btn-table" title="Table"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg></button>
+      <button class="view-btn active" id="btn-cards" title="Cards"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+      <button class="view-btn" id="btn-groups" title="Groups"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
+      <button class="view-btn" id="btn-map" title="Map" style="display:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></button>
+      <button class="view-btn" id="btn-tree" title="Org Tree"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><rect x="2" y="18" width="8" height="4" rx="1"/><rect x="14" y="18" width="8" height="4" rx="1"/><line x1="12" y1="6" x2="12" y2="14"/><line x1="6" y1="14" x2="18" y2="14"/><line x1="6" y1="14" x2="6" y2="18"/><line x1="18" y1="14" x2="18" y2="18"/></svg></button>
+    </div>
+    <button class="clear-btn" id="clear-filters">&#x2715; Clear</button>
+    <div class="count-badge"><span id="count">0</span> people</div>
+  </div>
+  <div id="app"></div>
+</div>
+
+<div id="toast" class="toast"><div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:#8FA596"></div><span id="toast-msg"></span></div>
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header" id="modal-header"></div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
+<script>
+var APP_VERSION='8.7';
+/* Name overrides — keyed by lowercase email. Applied after XLSX import & JSON load. */
+var NAME_OVERRIDES = {
+  'scothie@cdw.com': 'Scott Hiemstra'
+};
+var PROV = {ON:'Ontario',BC:'British Columbia',AB:'Alberta',QC:'Quebec',MB:'Manitoba',SK:'Saskatchewan',NB:'New Brunswick',NS:'Nova Scotia',NL:'Newfoundland',PE:'PEI',NT:'NWT',YT:'Yukon',NU:'Nunavut'};
+document.getElementById('sp-footer').textContent='March 2026 \u00b7 v'+APP_VERSION;
+document.getElementById('version-badge').textContent='v'+APP_VERSION;
+var LGEO = {'Toronto - West Mall - ON':{lat:43.6397,lng:-79.5531,label:'Toronto \u2013 West Mall',prov:'ON'},'Vancouver - BC':{lat:49.2827,lng:-123.1207,label:'Vancouver',prov:'BC'},'Edmonton - AB':{lat:53.5461,lng:-113.4938,label:'Edmonton',prov:'AB'},'Calgary - AB':{lat:51.0447,lng:-114.0719,label:'Calgary',prov:'AB'},'Virtual - Quebec':{lat:45.5019,lng:-73.5674,label:'Montreal/Quebec (Virtual)',prov:'QC'},'Ottawa - ON':{lat:45.4215,lng:-75.6972,label:'Ottawa',prov:'ON'},'Toronto Downtown - ON':{lat:43.651,lng:-79.347,label:'Toronto \u2013 Downtown',prov:'ON'},'Virtual - Alberta':{lat:52.268,lng:-113.811,label:'Alberta (Virtual)',prov:'AB'},'Virtual - Ontario':{lat:44.231,lng:-76.486,label:'Ontario (Virtual)',prov:'ON'},'Virtual - New Brunswick':{lat:46.565,lng:-66.462,label:'New Brunswick (Virtual)',prov:'NB'},'Virtual - Manitoba':{lat:49.895,lng:-97.138,label:'Manitoba (Virtual)',prov:'MB'},'Virtual - British Columbia':{lat:53.727,lng:-127.648,label:'BC (Virtual)',prov:'BC'}};
+var PC = {ON:'#FF7023',BC:'#5B8FDE',AB:'#34d399',QC:'#a78bfa',MB:'#f472b6',NB:'#facc15',NS:'#fb923c',SK:'#38bdf8',def:'#D0C8BA'};
+function pc(p){return PC[p]||PC.def;}
+
+var CDWGEO = {
+  'Chicago / Adams - IL':          {lat:41.8781,lng:-87.6298,label:'Chicago \u2013 Adams, IL',v:false},
+  'Vernon Hills / 200 - IL':       {lat:42.2217,lng:-87.9670,label:'Vernon Hills, IL',v:false},
+  'Tempe - AZ':                    {lat:33.4255,lng:-111.9400,label:'Tempe, AZ',v:false},
+  'Shelton - CT':                  {lat:41.3165,lng:-73.0832,label:'Shelton, CT',v:false},
+  'Shelton':                       {lat:41.3165,lng:-73.0832,label:'Shelton, CT',v:false},
+  'Cherry Hill - NJ':              {lat:39.9312,lng:-75.0241,label:'Cherry Hill, NJ',v:false},
+  'Cherry Hill':                   {lat:39.9312,lng:-75.0241,label:'Cherry Hill, NJ',v:false},
+  'Bell Works (Holmdel)':          {lat:40.3773,lng:-74.1577,label:'Bell Works, Holmdel NJ',v:false},
+  'Tampa - FL':                    {lat:27.9506,lng:-82.4572,label:'Tampa, FL',v:false},
+  'Tampa':                         {lat:27.9506,lng:-82.4572,label:'Tampa, FL',v:false},
+  'Dallas - TX':                   {lat:32.7767,lng:-96.7970,label:'Dallas, TX',v:false},
+  'Washington D.C. - VA':          {lat:38.9072,lng:-77.0369,label:'Washington D.C.',v:false},
+  'New York City - NY':            {lat:40.7128,lng:-74.0060,label:'New York City, NY',v:false},
+  'Sirius - Rosemont - IL':        {lat:41.9956,lng:-87.8648,label:'Sirius \u2013 Rosemont, IL',v:false},
+  'Sirius - Omaha - NE':           {lat:41.2565,lng:-95.9345,label:'Sirius \u2013 Omaha, NE',v:false},
+  'Sirius - Bloomington - MN':     {lat:44.8408,lng:-93.4166,label:'Sirius \u2013 Bloomington, MN',v:false},
+  'Sirius - Overland Park - KS':   {lat:38.9822,lng:-94.6708,label:'Sirius \u2013 Overland Park, KS',v:false},
+  'Sirius - San Antonio - TX':     {lat:29.4241,lng:-98.4936,label:'Sirius \u2013 San Antonio, TX',v:false},
+  'Sirius - Boca Raton - FL':      {lat:26.3683,lng:-80.1289,label:'Sirius \u2013 Boca Raton, FL',v:false},
+  'Sirius - Houston - TX':         {lat:29.7604,lng:-95.3698,label:'Sirius \u2013 Houston, TX',v:false},
+  'Sirius - Raleigh - NC':         {lat:35.7796,lng:-78.6382,label:'Sirius \u2013 Raleigh, NC',v:false},
+  'Madison - WI':                  {lat:43.0731,lng:-89.4012,label:'Madison, WI',v:false},
+  'Nashville - TN':                {lat:36.1627,lng:-86.7816,label:'Nashville, TN',v:false},
+  'Detroit - MI':                  {lat:42.3314,lng:-83.0458,label:'Detroit, MI',v:false},
+  'Las Vegas - NV':                {lat:36.1699,lng:-115.1398,label:'Las Vegas, NV',v:false},
+  'Indianapolis - IN':             {lat:39.7684,lng:-86.1581,label:'Indianapolis, IN',v:false},
+  'Cleveland - OH':                {lat:41.4993,lng:-81.6944,label:'Cleveland, OH',v:false},
+  'Seattle - WA':                  {lat:47.6062,lng:-122.3321,label:'Seattle, WA',v:false},
+  'Appleton - WI':                 {lat:44.2619,lng:-88.4154,label:'Appleton, WI',v:false},
+  'Grand Rapids - MI':             {lat:42.9634,lng:-85.6681,label:'Grand Rapids, MI',v:false},
+  'Milwaukee - WI':                {lat:43.0389,lng:-87.9065,label:'Milwaukee, WI',v:false},
+  'Cincinnati - OH':               {lat:39.1031,lng:-84.5120,label:'Cincinnati, OH',v:false},
+  'Portland - OR':                 {lat:45.5231,lng:-122.6765,label:'Portland, OR',v:false},
+  'Chicago-Riverside':             {lat:41.8319,lng:-87.8120,label:'Riverside, IL',v:false},
+  'Greenwood Village - CO':        {lat:39.6136,lng:-104.8914,label:'Greenwood Village, CO',v:false},
+  'Salt Lake City \u2013 UT':      {lat:40.7608,lng:-111.8910,label:'Salt Lake City, UT',v:false},
+  'Equinix - Elk Grove Village':   {lat:42.0042,lng:-87.9970,label:'Elk Grove Village, IL',v:false},
+  'Virtual - Florida':             {lat:27.9944,lng:-81.7603,label:'Florida (Virtual)',v:true},
+  'Virtual - Illinois':            {lat:40.6331,lng:-89.3985,label:'Illinois (Virtual)',v:true},
+  'Virtual - California':          {lat:36.7783,lng:-119.4179,label:'California (Virtual)',v:true},
+  'Virtual - Texas':               {lat:31.9686,lng:-99.9018,label:'Texas (Virtual)',v:true},
+  'Virtual - Virginia':            {lat:37.4316,lng:-78.6569,label:'Virginia (Virtual)',v:true},
+  'Virtual - North Carolina':      {lat:35.7596,lng:-79.0193,label:'North Carolina (Virtual)',v:true},
+  'Virtual - Maryland':            {lat:39.0458,lng:-76.6413,label:'Maryland (Virtual)',v:true},
+  'Virtual - Wisconsin':           {lat:43.7844,lng:-88.7879,label:'Wisconsin (Virtual)',v:true},
+  'Virtual - Georgia':             {lat:32.1656,lng:-82.9001,label:'Georgia (Virtual)',v:true},
+  'Virtual - Colorado':            {lat:39.5501,lng:-105.7821,label:'Colorado (Virtual)',v:true},
+  'Virtual - Ohio':                {lat:40.4173,lng:-82.9071,label:'Ohio (Virtual)',v:true},
+  'Virtual - New York':            {lat:42.1657,lng:-74.9481,label:'New York (Virtual)',v:true},
+  'Virtual - Indiana':             {lat:40.2672,lng:-86.1349,label:'Indiana (Virtual)',v:true},
+  'Virtual - Arizona':             {lat:34.0489,lng:-111.0937,label:'Arizona (Virtual)',v:true},
+  'Virtual - Pennsylvania':        {lat:41.2033,lng:-77.1945,label:'Pennsylvania (Virtual)',v:true},
+  'Virtual - New Jersey':          {lat:40.0583,lng:-74.4057,label:'New Jersey (Virtual)',v:true},
+  'Virtual - Washington':          {lat:47.7511,lng:-120.7401,label:'Washington (Virtual)',v:true},
+  'Virtual - Tennessee':           {lat:35.5175,lng:-86.5804,label:'Tennessee (Virtual)',v:true},
+  'Virtual - Michigan':            {lat:44.3148,lng:-85.6024,label:'Michigan (Virtual)',v:true},
+  'Virtual - South Carolina':      {lat:33.8361,lng:-81.1637,label:'South Carolina (Virtual)',v:true},
+  'Virtual - Connecticut':         {lat:41.5978,lng:-72.7554,label:'Connecticut (Virtual)',v:true},
+  'Virtual - Missouri':            {lat:38.5767,lng:-92.1735,label:'Missouri (Virtual)',v:true},
+  'Virtual - Massachusetts':       {lat:42.4072,lng:-71.3824,label:'Massachusetts (Virtual)',v:true},
+  'Virtual - Iowa':                {lat:41.8780,lng:-93.0977,label:'Iowa (Virtual)',v:true},
+  'Virtual - Minnesota':           {lat:46.7296,lng:-94.6859,label:'Minnesota (Virtual)',v:true},
+  'Virtual - Oklahoma':            {lat:35.4676,lng:-97.5164,label:'Oklahoma (Virtual)',v:true},
+  'Virtual - Utah':                {lat:39.3210,lng:-111.0937,label:'Utah (Virtual)',v:true},
+  'Virtual - Oregon':              {lat:43.8041,lng:-120.5542,label:'Oregon (Virtual)',v:true},
+  'Virtual - District of Columbia':{lat:38.9072,lng:-77.0369,label:'Washington D.C. (Virtual)',v:true},
+  'Virtual - Nebraska':            {lat:41.4925,lng:-99.9018,label:'Nebraska (Virtual)',v:true},
+  'Virtual - Kentucky':            {lat:37.8393,lng:-84.2700,label:'Kentucky (Virtual)',v:true},
+  'Virtual - Nevada':              {lat:38.8026,lng:-116.4194,label:'Nevada (Virtual)',v:true},
+  'Virtual - West Virginia':       {lat:38.5976,lng:-80.4549,label:'West Virginia (Virtual)',v:true},
+  'Virtual - Hawaii':              {lat:19.8968,lng:-155.5828,label:'Hawaii (Virtual)',v:true},
+  'Virtual - New Hampshire':       {lat:43.1939,lng:-71.5724,label:'New Hampshire (Virtual)',v:true},
+  'Virtual - Alabama':             {lat:32.3182,lng:-86.9023,label:'Alabama (Virtual)',v:true},
+  'Virtual - Louisiana':           {lat:30.9843,lng:-91.9623,label:'Louisiana (Virtual)',v:true},
+  'Virtual - Idaho':               {lat:44.0682,lng:-114.7420,label:'Idaho (Virtual)',v:true},
+  'Virtual - Mississippi':         {lat:32.3547,lng:-89.3985,label:'Mississippi (Virtual)',v:true},
+  'Virtual - South Dakota':        {lat:43.9695,lng:-99.9018,label:'South Dakota (Virtual)',v:true},
+  'Virtual - Rhode Island':        {lat:41.6809,lng:-71.5118,label:'Rhode Island (Virtual)',v:true},
+  'Virtual - Arkansas':            {lat:34.7997,lng:-92.3731,label:'Arkansas (Virtual)',v:true},
+  'Virtual - Maine':               {lat:45.2538,lng:-69.4455,label:'Maine (Virtual)',v:true},
+  'Virtual - Montana':             {lat:46.8797,lng:-110.3626,label:'Montana (Virtual)',v:true},
+  'Virtual - Vermont':             {lat:44.5588,lng:-72.5778,label:'Vermont (Virtual)',v:true},
+  'Virtual - Kansas':              {lat:38.5266,lng:-96.7265,label:'Kansas (Virtual)',v:true},
+  'Virtual - New Mexico':          {lat:34.5199,lng:-105.8701,label:'New Mexico (Virtual)',v:true},
+  'Virtual - Alaska':              {lat:64.2008,lng:-153.4937,label:'Alaska (Virtual)',v:true},
+  'Virtual - Delaware':            {lat:38.9108,lng:-75.5277,label:'Delaware (Virtual)',v:true}
+};
+
+var CFG = {
+  cdw:{file:'CDW_data_.json',eyebrow:'CDW \u00b7 Sales Organization',title:'CDW Org <em>Directory</em>',hint:'Search name, title, email, manager\u2026',hasMap:true,defaultView:'cards',
+    filters:[{id:'f-seg',key:'segment',lbl:'All Segments'},{id:'f-ch',key:'channel',lbl:'All Channels'},{id:'f-tier',key:'tier',lbl:'All Tiers'},{id:'f-reg',key:'region',lbl:'All Regions'},{id:'f-dist',key:'district',lbl:'All Districts'},{id:'f-tg',key:'titleGroup',lbl:'All Roles'},{id:'f-mgr',key:'manager',lbl:'All Managers'},{id:'f-state',key:'state',lbl:'All States'},{id:'f-loc',key:'location',lbl:'All Offices',vfn:function(d){var l=d.location||'';if(!l)return null;var cv=l.replace(/\s*-\s*[A-Z]{2}\s*$/,'').replace(/\s*\/\s*\d+\s*$/,'').trim();return cv||null;}}],
+    cols:[{k:'name',l:'Name'},{k:'titleGroup',l:'Role'},{k:'segment',l:'Segment'},{k:'channel',l:'Channel'},{k:'tier',l:'Tier'},{k:'region',l:'Region'},{k:'manager',l:'Manager'}],
+    grpKey:'manager',
+    sub:function(d){return d.title||d.titleGroup||'';},
+    tags:function(d){var t=[];if(d.titleGroup)t.push({c:'tag seg',v:d.titleGroup});if(d.channel)t.push({c:'tag ch',v:d.channel});if(d.tier)t.push({c:'tag tier',v:d.tier});if(d.region)t.push({c:'tag',v:d.region});if(d.district)t.push({c:'tag',v:d.district});if(d.location)t.push({c:'tag',v:'Home Location \u2013 '+d.location});return t;},
+    mhdr:function(d){var t='';if(d.titleGroup)t+='<span class="tag seg">'+e(d.titleGroup)+'</span> ';if(d.segment)t+='<span class="tag ch">'+e(d.segment)+'</span> ';if(d.channel)t+='<span class="tag tier">'+e(d.channel)+'</span>';return{s:d.title||d.titleGroup||'',t:t};},
+    mbody:function(d){
+      var s1=ds('Contact &amp; Location',[{l:'Email',v:d.email?'<a href="mailto:'+e(d.email)+'">'+e(d.email)+'</a>':'&mdash;',f:1},{l:'Phone',v:e(d.phone)||'&mdash;'},{l:'Location',v:e(d.location)||'&mdash;'},{l:'State',v:e(d.state)||'&mdash;'},{l:'LOS',v:e(d.losMonths)||'&mdash;'},{l:'LOS Group',v:e(d.losGroup)||'&mdash;'},{l:'Academy',v:e(d.academyFlag)||'&mdash;'}]);
+      var s2=ds('Role &amp; Organization',[{l:'Title',v:e(d.title)||'&mdash;',f:1},{l:'Role Group',v:e(d.titleGroup)||'&mdash;'},{l:'Segment',v:e(d.segment)||'&mdash;'},{l:'Channel',v:e(d.channel)||'&mdash;'},{l:'Tier',v:e(d.tier)||'&mdash;'},{l:'Region',v:e(d.region)||'&mdash;'},{l:'Area',v:e(d.area)||'&mdash;'},{l:'District',v:e(d.district)||'&mdash;'}]);
+      var ch='';if(d.manager)ch+=cr('Manager',d.manager,d.managerTitle,d.managerEmail);if(d.director)ch+=cr('Director',d.director,d.directorTitle,d.directorEmail);
+      if(ch)ch='<div class="detail-section"><div class="detail-section-title">Reporting Chain</div>'+ch+'</div>';
+      var acctHtml=ACCT_LOADED?acctTableHTML(acctForEmail(d.email)):'';
+      return s1+s2+ch+acctHtml;}},
+  dcs:{file:'dcs_data.json',eyebrow:'CDW \u00b7 Hybrid Infrastructure',title:'DCS Org <em>Directory</em>',hint:'Search name, title, email, location\u2026',hasMap:false,defaultView:'cards',
+    filters:[{id:'f-dir',key:'director',lbl:'All Directors',vfn:function(d){var v=d.director;return(v&&v.trim()&&v.charAt(0)!=='_')?v:null;}},{id:'f-sr',key:'srManager',lbl:'All Sr Managers',vfn:function(d){var v=d.srManager;return(v&&v.trim()&&v!=='-')?v:null;}},{id:'f-mgr',key:'manager',lbl:'All Managers',vfn:function(d){var m=d.manager;return(!m||m==='-'||m.charAt(0)==='_')?null:m;}},{id:'f-seg',key:'segment',lbl:'All Segments'},{id:'f-sol',key:'solutionArea',lbl:'All Solution Areas'},{id:'f-hst',key:'homeLocation',lbl:'All Home States',vfn:function(d){var h=d.homeLocation||'';if(!h)return null;var m=h.match(/,\s*([A-Z]{2})\s*$/);if(m)return m[1];if(h.length===2&&h===h.toUpperCase())return h;return null;}},{id:'f-off',key:'officeLocation',lbl:'All Offices',vfn:function(d){return d.officeLocation||null;}}],
+    cols:[{k:'name',l:'Name'},{k:'title',l:'Title'},{k:'director',l:'Director'},{k:'srManager',l:'Sr Manager'},{k:'manager',l:'Manager'},{k:'segment',l:'Segment'},{k:'homeLocation',l:'Home'}],
+    grpKey:'manager',
+    sub:function(d){return d.title||'';},
+    tags:function(d){var t=[];if(d.director&&d.director.charAt(0)!=='_')t.push({c:'tag tier',v:'Dir: '+d.director});if(d.srManager&&d.srManager!=='-')t.push({c:'tag',v:'Sr Mgr: '+d.srManager});if(d.segment)t.push({c:'tag seg',v:d.segment});if(d.solutionArea)t.push({c:'tag sol',v:d.solutionArea});if(d.homeLocation)t.push({c:'tag',v:'Home \u2013 '+d.homeLocation});if(d.statesCovers)t.push({c:'tag',v:'Coverage \u2013 '+d.statesCovers});return t;},
+    mhdr:function(d){var t='';if(d.segment)t+='<span class="tag seg">'+e(d.segment)+'</span> ';if(d.solutionArea)t+='<span class="tag sol">'+e(d.solutionArea)+'</span>';return{s:d.title||'',t:t};},
+    mbody:function(d){var m=(!d.manager||d.manager==='-'||d.manager.charAt(0)==='_')?'Leadership':e(d.manager);var dir=(d.director&&d.director.charAt(0)!=='_')?e(d.director):'Leadership';var sr=d.srManager&&d.srManager!=='-'?e(d.srManager):'';var chain='';if(dir)chain+=cr('Director',dir,'','');if(sr)chain+=cr('Sr Manager',sr,'','');if(m&&m!=='Leadership'&&m!==sr)chain+=cr('Manager',m,'','');if(chain)chain='<div class="detail-section"><div class="detail-section-title">Reporting Chain</div>'+chain+'</div>';return ds('Details',[{l:'Email',v:d.email?'<a href="mailto:'+e(d.email)+'">'+e(d.email)+'</a>':'&mdash;',f:1},{l:'Solution Area',v:e(d.solutionArea)||'&mdash;'},{l:'Segment',v:e(d.segment)||'&mdash;',f:1},{l:'Home Location',v:e(d.homeLocation)||'&mdash;'},{l:'CDW Office',v:e(d.officeLocation)||'&mdash;'},{l:'States Covered',v:e(d.statesCovers)||'&mdash;',f:1}])+chain;}},
+  canada:{file:'canada_data.json',eyebrow:'CDW \u00b7 Canada',title:'Canada Org <em>Directory</em>',hint:'Search name, email, location, manager\u2026',hasMap:true,defaultView:'cards',
+    filters:[{id:'f-role',key:'role',lbl:'All Roles'},{id:'f-seg',key:'segment',lbl:'All Segments'},{id:'f-prov',key:'province',lbl:'All Provinces',dfn:function(v){return(PROV[v]||v)+' ('+v+')';}},{id:'f-mgr',key:'manager',lbl:'All Managers'},{id:'f-sr',key:'srManager',lbl:'All Sr Managers'},{id:'f-city',key:'location',lbl:'All Cities',vfn:function(d){var l=d.location||'';if(!l)return null;var cv=l.replace(/\s*-\s*[A-Z]{2}\s*$/,'').replace(/\s*\([^)]*\)\s*$/,'').trim();if(/^virtual/i.test(cv))return null;return cv||null;}}],
+    cols:[{k:'name',l:'Name'},{k:'role',l:'Role'},{k:'segment',l:'Segment'},{k:'province',l:'Province',dfn:function(v){return v?(PROV[v]||v)+' ('+v+')':'&mdash;';}},{k:'location',l:'Location'},{k:'manager',l:'Manager'},{k:'srManager',l:'Sr Manager'}],
+    grpKey:'manager',
+    sub:function(d){return d.role||'';},
+    tags:function(d){var t=[];if(d.segment)t.push({c:'tag seg',v:d.segment});if(d.province)t.push({c:'tag prov',v:PROV[d.province]||d.province});if(d.losMonths)t.push({c:'tag',v:d.losMonths});if(d.location)t.push({c:'tag',v:'Home Location \u2013 '+d.location});return t;},
+    mhdr:function(d){var rc=d.role==='Account Manager'?'role-AM':d.role==='Manager'?'role-Mgr':d.role==='FAE'?'role-FAE':d.role==='MDC'?'role-MDC':'role-ATAE';var t='<span class="tag '+rc+'">'+e(d.role==='MDC'?d.title||'MDC':d.role||'')+'</span> ';if(d.segment)t+='<span class="tag seg">'+e(d.segment)+'</span> ';if(d.province)t+='<span class="tag prov">'+e(PROV[d.province]||d.province)+'</span>';return{s:d.title||d.dept||d.role||'',t:t};},
+    mbody:function(d){var s1=ds('Contact &amp; Location',[{l:'Email',v:d.email?'<a href="mailto:'+e(d.email)+'">'+e(d.email)+'</a>':'&mdash;',f:1},{l:'Location',v:e(d.location)||'&mdash;',f:1},{l:'Province',v:d.province?e(PROV[d.province]||d.province):'&mdash;'},{l:'Tenure',v:e(d.losMonths)||'&mdash;'},{l:'Dept',v:e(d.dept)||'&mdash;',f:1}]);var ch='';if(d.manager)ch+=cr('Manager',d.manager,'','');if(d.srManager)ch+=cr('Sr Manager',d.srManager,'','');if(ch)ch='<div class="detail-section"><div class="detail-section-title">Reporting Chain</div>'+ch+'</div>';return s1+ch;}}
+};
+
+var CACHE={}, ORG='cdw', DATA=[], VIEW='cards', SCOL='name', SDIR=1, SHOW_SMIT=false;
+var SEARCH_INDEX=[]; // pre-built search strings, parallel to DATA
+var ACCT_SEARCH_INDEX=[]; // account customer names, parallel to DATA
+var lmap=null, lmarkers=[], aloc=null, mq='', mf1='', mf2='';
+var COLORS=['#71584C','#5A6359','#95685D','#8FA596','#BD673D','#DEA193','#C5E4CC','#F2CDC4','#D0C8BA','#7a6255','#6b7a6a','#a07060'];
+var SEG_COLORS={'Commercial':'#BD673D','Government':'#5A6359','Education':'#8FA596','Healthcare':'#95685D','Financial Services':'#71584C','Federal':'#6b7a6a','State & Local':'#7a6255'};
+var CC={};
+function gc(n,seg){
+  var k=n+(seg||'');
+  if(!CC[k]){
+    if(seg&&SEG_COLORS[seg]){CC[k]=SEG_COLORS[seg];}
+    else{var h=0;for(var i=0;i<n.length;i++){h=((h<<5)-h)+n.charCodeAt(i);h|=0;}CC[k]=COLORS[Math.abs(h)%COLORS.length];}
+  }
+  return CC[k];
+}
+function ini(n){return(n||'?').split(' ').filter(Boolean).map(function(p){return p[0];}).slice(0,2).join('').toUpperCase();}
+function av(n,sz,fs,seg){sz=sz||40;fs=fs||14;var c=gc(n||'?',seg);return'<div class="avatar" style="width:'+sz+'px;height:'+sz+'px;font-size:'+fs+'px;background:linear-gradient(135deg,'+c+'cc,'+c+'55)">'+ini(n||'?')+'</div>';}
+function e(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function ds(title,fields){var items=fields.map(function(f){return'<div class="detail-item'+(f.f?' full':'')+'">'+'<div class="detail-label">'+f.l+'</div><div class="detail-value">'+f.v+'</div></div>';}).join('');return'<div class="detail-section"><div class="detail-section-title">'+title+'</div><div class="detail-grid">'+items+'</div></div>';}
+function cr(lbl,name,sub,email){return'<div class="chain-row">'+av(name,30,11)+'<div><div class="chain-label">'+lbl+'</div><div class="chain-name">'+e(name)+'</div>'+(sub?'<div class="chain-sub">'+e(sub)+'</div>':'')+'</div>'+(email?'<a class="email-link" href="mailto:'+e(email)+'" style="margin-left:auto">&#x2709;</a>':'')+'</div>';}
+
+function spProgress(pct,msg){
+  var bar=document.getElementById('sp-bar');
+  var status=document.getElementById('sp-status');
+  if(bar)bar.style.width=pct+'%';
+  if(status)status.textContent=msg;
+}
+function spDismiss(){
+  var splash=document.getElementById('splash');
+  if(!splash)return;
+  splash.classList.add('sp-out');
+  setTimeout(function(){splash.style.display='none';},650);
+}
+
+// Fake a crawling progress bar over ~3s then fire a callback
+function spFakeLoad(cb, full){
+  if(full){
+    var steps=[
+      {pct:15, msg:'Connecting…',        delay:0},
+      {pct:35, msg:'Loading directory…', delay:500},
+      {pct:58, msg:'Fetching people…',   delay:1100},
+      {pct:78, msg:'Building index…',    delay:1900},
+      {pct:92, msg:'Almost there…',      delay:2500},
+      {pct:100,msg:'Ready',                   delay:3000}
+    ];
+    steps.forEach(function(s){
+      setTimeout(function(){spProgress(s.pct,s.msg);},s.delay);
+    });
+    setTimeout(cb,3200);
+  } else {
+    spProgress(40,'Loading…');
+    setTimeout(function(){spProgress(100,'Ready');cb();},300);
+  }
+}
+
+function showLoading(msg){document.getElementById('loading-screen').style.display='none';document.getElementById('app-shell').style.display='none';}
+function showError(msg){spDismiss();document.getElementById('loading-screen').style.display='';document.getElementById('loading-screen').innerHTML='<div style="text-align:center;padding:60px 20px"><p style="color:#DEA193;font-size:15px;margin-bottom:8px">Failed to load data</p><p style="color:var(--muted);font-size:12px;font-family:monospace">'+e(msg)+'</p><p style="color:var(--muted);font-size:11px;margin-top:12px">Make sure all JSON files are in the same folder as index.html</p></div>';}
+
+function loadOrg(org,cb){
+  if(CACHE[org]){cb(null,CACHE[org]);return;}
+  var url=CFG[org].file;
+  var x=new XMLHttpRequest();
+  x.open('GET',url);
+  x.onload=function(){
+    if(x.status>=200&&x.status<300){
+      try{var d=JSON.parse(x.responseText);d.forEach(function(p){var ov=NAME_OVERRIDES[(p.email||'').toLowerCase()];if(ov)p.name=ov;});CACHE[org]=d;cb(null,d);}
+      catch(err){cb('JSON parse error: '+err.message);}
+    }else{cb('HTTP '+x.status+' loading '+CFG[org].file);}
+  };
+  x.onerror=function(){cb('Network error loading '+CFG[org].file);};
+  x.send();
+}
+
+var ORG_BG={cdw:'#2D2A27',dcs:'#252B24',canada:'#2B2220'};
+var ORG_BG_DARK={cdw:'#2D2A27',dcs:'#252B24',canada:'#2B2220'};
+var ORG_BG_LIGHT={cdw:'#F5F0E8',dcs:'#EFF5EE',canada:'#F5EDEB'};
+function getTheme(){return document.documentElement.getAttribute('data-theme')||'dark';}
+function switchOrg(org){
+  var isDark=getTheme()==='dark';
+  var bg=isDark?ORG_BG_DARK:ORG_BG_LIGHT;
+  document.documentElement.style.setProperty('--bg',bg[org]||bg.cdw);
+  var isFirst=!CACHE[org];
+  document.querySelectorAll('.org-btn').forEach(function(b){b.disabled=true;b.classList.toggle('active',b.dataset.org===org);});
+  showLoading('Loading '+org.toUpperCase()+'&hellip;');
+
+  // Track whether both data AND the fake timer are done
+  var dataReady=false, timerReady=false, pendingData=null, pendingErr=null;
+
+  function tryFinish(){
+    if(!dataReady||!timerReady)return;
+    document.querySelectorAll('.org-btn').forEach(function(b){b.disabled=false;});
+    if(pendingErr){showError(pendingErr);return;}
+    if(isFirst)spDismiss();
+    // Continue with normal org switch
+    var data=pendingData;
+    ORG=org;DATA=data;SCOL='name';SDIR=1;mq='';mf1='';mf2='';aloc=null;
+    buildSearchIndex();
+    if(lmap){lmap.remove();lmap=null;lmarkers=[];}
+    var cfg=CFG[org];
+    document.getElementById('header-eyebrow').innerHTML=cfg.eyebrow;
+    document.getElementById('header-h1').innerHTML=cfg.title;
+    document.getElementById('header-meta').textContent='March 2026 \u00b7 v'+APP_VERSION+' \u00b7 '+data.length.toLocaleString()+' people';
+    document.getElementById('search').placeholder=cfg.hint;
+    document.getElementById('search').value='';
+    document.getElementById('acct-search').value='';
+    var mb=document.getElementById('btn-map');
+    mb.style.display=cfg.hasMap?'':'none';
+    var ab=document.getElementById('acct-btn');if(ab)ab.style.display=org==='cdw'?'':'none';
+    var asw=document.getElementById('acct-search-container');if(asw)asw.style.display=(org==='cdw'&&ACCT_LOADED)?'block':'none';
+    if(!cfg.hasMap&&VIEW==='map'){VIEW='table';document.querySelectorAll('.view-btn').forEach(function(b){b.classList.remove('active');});document.getElementById('btn-table').classList.add('active');}
+    if(cfg.defaultView&&VIEW!==cfg.defaultView){VIEW=cfg.defaultView;document.querySelectorAll('.view-btn').forEach(function(b){b.classList.remove('active');});var dvb=document.getElementById('btn-'+cfg.defaultView);if(dvb)dvb.classList.add('active');}
+    populateFilters();
+    var smitBtn=document.getElementById('smit-btn');if(smitBtn){smitBtn.style.display=org==='cdw'?'flex':'none';smitBtn.classList.remove('active');}SHOW_SMIT=false;
+    document.getElementById('loading-screen').style.display='none';
+    document.getElementById('app-shell').style.display='';
+    render();
+  }
+
+  // Start fake progress bar (only on first load of this org)
+  if(isFirst){
+    var _isPageLoad=Object.keys(CACHE).length===0;
+    spFakeLoad(function(){setTimeout(function(){timerReady=true;tryFinish();},300);},_isPageLoad);
+  } else {
+    timerReady=true;
+  }
+
+  // Kick off actual data load
+  loadOrg(org,function(err,data){
+    pendingErr=err;
+    pendingData=data;
+    dataReady=true;
+    tryFinish();
+    if(!err){Object.keys(CFG).forEach(function(o){if(o!==org&&!CACHE[o]){setTimeout(function(){loadOrg(o,function(){});},1500);}});}
+  });
+}
+
+function populateFilters(){
+  var cfg=CFG[ORG],fc=document.getElementById('filter-container');
+  fc.innerHTML='';
+  cfg.filters.forEach(function(f){
+    var sel=document.createElement('select');sel.id=f.id;
+    fc.appendChild(sel);
+    sel.addEventListener('change',function(){refreshFilters(f.id);render();});
+  });
+  refreshFilters(null);
+}
+
+function getVal(f,d){
+  if(f.vfn)return f.vfn(d);
+  return d[f.key]||'';
+}
+
+function buildSearchIndex(){
+  SEARCH_INDEX=DATA.map(function(d){
+    return Object.values(d).filter(function(v){return typeof v==='string';}).join(' ').toLowerCase();
+  });
+  // Build separate account search index (CDW only)
+  ACCT_SEARCH_INDEX=DATA.map(function(d){
+    if(ACCT_LOADED&&ORG==='cdw'&&d.email){
+      var accts=acctForEmail(d.email);
+      if(accts.length){
+        return accts.map(function(a){return a.customer;}).join(' ').toLowerCase();
+      }
+    }
+    return '';
+  });
+}
+
+function getFilteredBy(excludeId){
+  var cfg=CFG[ORG],q=document.getElementById('search').value.toLowerCase();
+  var aq=document.getElementById('acct-search').value.toLowerCase();
+  return DATA.filter(function(d,i){
+    if(ORG==='cdw'&&!SHOW_SMIT){var roleEl=document.getElementById('f-tg');if(!(roleEl&&roleEl.value&&/smit/i.test(roleEl.value))&&isSMIT(d))return false;}
+    for(var j=0;j<cfg.filters.length;j++){
+      var f=cfg.filters[j];
+      if(f.id===excludeId)continue;
+      var el=document.getElementById(f.id);
+      if(!el||!el.value)continue;
+      if(getVal(f,d)!==el.value)return false;
+    }
+    if(q&&SEARCH_INDEX[i].indexOf(q)===-1)return false;
+    if(aq&&ACCT_SEARCH_INDEX[i].indexOf(aq)===-1)return false;
+    return true;
+  });
+}
+
+function refreshFilters(changedId){
+  var cfg=CFG[ORG];
+  cfg.filters.forEach(function(f){
+    var sel=document.getElementById(f.id);if(!sel)return;
+    var prev=sel.value;
+    var pool=getFilteredBy(f.id);
+    var vals;
+    if(f.vfn){vals=pool.map(f.vfn).filter(Boolean);}
+    else{vals=pool.map(function(d){return d[f.key];}).filter(Boolean);}
+    vals=Array.from(new Set(vals)).sort();
+    sel.innerHTML='';
+    var o=document.createElement('option');o.value='';o.textContent=f.lbl;sel.appendChild(o);
+    vals.forEach(function(v){
+      var o2=document.createElement('option');o2.value=v;
+      o2.textContent=f.dfn?f.dfn(v):v;
+      sel.appendChild(o2);
+    });
+    if(vals.indexOf(prev)!==-1)sel.value=prev;
+  });
+}
+
+function getFiltered(){
+  var cfg=CFG[ORG],q=document.getElementById('search').value.toLowerCase();
+  var aq=document.getElementById('acct-search').value.toLowerCase();
+  return DATA.filter(function(d,i){
+    for(var j=0;j<cfg.filters.length;j++){
+      var f=cfg.filters[j],el=document.getElementById(f.id);
+      if(!el||!el.value)continue;
+      if(getVal(f,d)!==el.value)return false;
+    }
+    if(q&&SEARCH_INDEX[i].indexOf(q)===-1)return false;
+    if(aq&&ACCT_SEARCH_INDEX[i].indexOf(aq)===-1)return false;
+    return true;
+  });
+}
+
+function toggleSMIT(){
+  SHOW_SMIT=!SHOW_SMIT;
+  var btn=document.getElementById('smit-btn');
+  if(btn){btn.classList.toggle('active',SHOW_SMIT);btn.title=SHOW_SMIT?'Hide SMIT records':'Show SMIT records';}
+  render();
+}
+function isSMIT(d){return /smit/i.test(d.titleGroup||'')||/smit/i.test(d.title||'');}
+function render(){
+  var fil=getFiltered();
+  document.getElementById('count').textContent=fil.length.toLocaleString();
+  var app=document.getElementById('app');
+  app.classList.toggle('map-mode',VIEW==='map');
+  if(VIEW==='map'){renderMap(fil);return;}
+  if(!fil.length){app.innerHTML='<div style="padding:28px 40px"><div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p>No results found</p></div></div>';return;}
+  if(VIEW==='table')rTable(fil);
+  else if(VIEW==='cards')rCards(fil);
+  else if(VIEW==='tree')rTree(fil);
+  else rGroups(fil);
+}
+
+function rTable(data){
+  var cfg=CFG[ORG];
+  var sorted=data.slice().sort(function(a,b){return String(a[SCOL]||'').localeCompare(String(b[SCOL]||''))*SDIR;});
+  var th=cfg.cols.map(function(c){var s=SCOL===c.k;return'<th class="'+(s?'sorted':'')+'" data-col="'+c.k+'">'+c.l+'<span class="sort-icon">'+(s?(SDIR===1?'&#x2191;':'&#x2193;'):'&#x2195;')+'</span></th>';}).join('');
+  var tb=sorted.map(function(d){
+    var cells=cfg.cols.map(function(c){
+      if(c.k==='name')return'<td class="name-cell"><strong>'+e(d.name)+'</strong><small>'+(d.email?'<a class="email-link" href="mailto:'+e(d.email)+'" onclick="event.stopPropagation()">'+e(d.email)+'</a>':'')+'</small></td>';
+      var raw=d[c.k]||'';
+      return'<td>'+(c.dfn?c.dfn(raw):(e(raw)||'&mdash;'))+'</td>';
+    }).join('');
+    return'<tr data-name="'+encodeURIComponent(d.name)+'">'+cells+'</tr>';
+  }).join('');
+  document.getElementById('app').innerHTML='<div style="padding:28px 40px"><div class="table-wrap"><table><thead><tr>'+th+'</tr></thead><tbody>'+tb+'</tbody></table></div></div>';
+  document.querySelectorAll('th[data-col]').forEach(function(h){h.addEventListener('click',function(){SDIR=SCOL===h.dataset.col?SDIR*-1:1;SCOL=h.dataset.col;render();});});
+  document.querySelectorAll('tbody tr').forEach(function(tr){tr.addEventListener('click',function(){openModal(decodeURIComponent(tr.dataset.name));});});
+}
+
+function cardTags(d){
+  var cfg=CFG[ORG];
+  var seen={};
+  return cfg.tags(d).filter(function(t){if(seen[t.v])return false;seen[t.v]=true;return true;})
+    .map(function(t){return'<span class="'+t.c+'">'+e(t.v)+'</span>';}).join('');
+}
+
+function buildCard(d,cls){
+  cls=cls||'card';
+  var tags=cardTags(d);
+  var mgr=cleanName(d[CFG[ORG].grpKey]||'');
+  var ab=ACCT_LOADED&&ORG==='cdw'?acctBadgeHTML(d.email):'';
+  return'<div class="'+cls+'" data-name="'+encodeURIComponent(d.name)+'">'+
+    '<div class="card-header">'+av(d.name,40,14,d.segment||d.channel)+'<div><div class="card-name">'+e(d.name)+' '+ab+'</div><div class="card-subtitle">'+e(CFG[ORG].sub(d))+'</div></div></div>'+
+    '<div class="card-tags">'+tags+'</div>'+
+    '<div class="card-footer"><div class="card-mgr">'+(mgr?'Mgr: <strong>'+e(mgr)+'</strong>':'')+'</div>'+(d.email?'<a class="email-link" href="mailto:'+e(d.email)+'" onclick="event.stopPropagation()">&#x2709;</a>':'')+'</div>'+
+    '</div>';
+}
+
+function buildAcctCard(acct,mgrName){
+  var icon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
+  var meta='';
+  if(acct.city&&acct.state)meta=e(acct.city)+', '+e(acct.state);
+  else if(acct.state)meta=e(acct.state);
+  if(acct.custNum)meta+=(meta?' &middot; ':'')+e(acct.custNum);
+  var t12='';
+  if(acct.t12){t12='<div style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--accent3);font-weight:500">'+fmtT12(acct.t12)+'</div>';}
+  return'<div class="acct-card" data-name="'+encodeURIComponent(mgrName)+'">'+
+    '<div class="acct-card-header">'+
+      '<div class="acct-card-icon">'+icon+'</div>'+
+      '<div style="flex:1"><div class="acct-card-name">'+e(acct.customer)+'</div>'+(meta?'<div class="acct-card-meta">'+meta+'</div>':'')+'</div>'+
+    '</div>'+
+    '<div class="acct-card-footer">'+
+      '<div class="acct-card-mgr">AM: <strong>'+e(mgrName)+'</strong></div>'+
+      t12+
+    '</div>'+
+    '</div>';
+}
+
+function rCards(data){
+  var cfg=CFG[ORG];
+
+  // ── ACCOUNT VIEW: Show account cards when account search is active ──
+  var aq=document.getElementById('acct-search')?document.getElementById('acct-search').value.trim():'';
+  if(aq&&ACCT_LOADED&&ORG==='cdw'){
+    var acctCards=[];
+    var seen={}; // Track unique accounts to avoid duplicates
+    var aqLower=aq.toLowerCase();
+
+    // data is already filtered by ACCT_SEARCH_INDEX, so we just need to extract matching accounts
+    data.forEach(function(d){
+      if(!d.email)return;
+      var accts=acctForEmail(d.email);
+      if(!accts.length)return;
+      // Only check accounts that match the query
+      accts.forEach(function(acct){
+        if(acct.customer.toLowerCase().indexOf(aqLower)===-1)return;
+        var key=acct.customer.toLowerCase()+'|'+acct.custNum;
+        if(seen[key])return;
+        seen[key]=true;
+        acctCards.push(buildAcctCard(acct,d.name));
+      });
+    });
+    if(!acctCards.length){
+      document.getElementById('app').innerHTML='<div style="padding:28px 40px"><div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p>No accounts found</p></div></div>';
+      return;
+    }
+    var html='<div class="org-section-label">'+acctCards.length+' Accounts</div>'+
+      '<div class="cards-grid">'+acctCards.join('')+'</div>';
+    document.getElementById('app').innerHTML='<div style="padding:28px 40px">'+html+'</div>';
+    document.querySelectorAll('[data-name]').forEach(function(el){
+      el.addEventListener('click',function(ev){
+        if(ev.target.closest('a'))return;
+        openModal(decodeURIComponent(el.dataset.name));
+      });
+    });
+    return;
+  }
+
+  // ── DCS: 4-level hierarchy renderer (Director > Sr Manager > Manager > IC) ──
+  if(ORG==='dcs'){
+    var byName={};
+    data.forEach(function(d){byName[d.name]=d;});
+    var rendered={};
+    var html='';
+
+    // Group by director
+    var dirGroups={};
+    data.forEach(function(d){
+      var dir=d.director&&d.director.trim()&&d.director.charAt(0)!=='_'?d.director:'— No Director —';
+      if(!dirGroups[dir])dirGroups[dir]=[];
+      dirGroups[dir].push(d);
+    });
+
+    // DCS explicit tier sort: Directors(0) > Sr Managers(1) > Managers(2)
+    // Uses actual data fields so hierarchy is always respected regardless of report counts
+    var reportsOf={};
+    data.forEach(function(d){
+      var m=d.manager||'';
+      if(m&&m!=='-'){if(!reportsOf[m])reportsOf[m]=[];reportsOf[m].push(d);}
+    });
+    var mgrNames=Object.keys(reportsOf).filter(function(m){return byName[m];});
+
+    // Assign explicit tier from data: if nobody has you as their srManager you're a manager(2),
+    // if someone has you as srManager you're a sr manager(1),
+    // if someone has you as director you're a director(0)
+    var srMgrSet={},dirSet={};
+    data.forEach(function(d){
+      if(d.srManager&&d.srManager!=='-')srMgrSet[d.srManager]=true;
+      if(d.director&&d.director.charAt(0)!=='_')dirSet[d.director]=true;
+    });
+    function dcsTier(name){
+      if(dirSet[name]&&byName[name]&&(!byName[name].director||byName[name].director===name))return 0;
+      if(srMgrSet[name])return 1;
+      return 2;
+    }
+    mgrNames.sort(function(a,b){
+      var ta=dcsTier(a),tb=dcsTier(b);
+      if(ta!==tb)return ta-tb; // lower tier number = higher in hierarchy = renders first
+      return reportsOf[b].length-reportsOf[a].length;
+    });
+    mgrNames.forEach(function(mgrName){
+      var mgr=byName[mgrName];
+      var reports=reportsOf[mgrName];
+      rendered[mgrName]=true;
+      var reportCards=reports.map(function(r){
+        // Mark as rendered: ICs always, sub-managers only if they appear at a lower tier
+        // Sub-managers with their own block will be rendered separately — don't mark them here
+        if(!reportsOf[r.name])rendered[r.name]=true;
+        return buildCard(r,'org-report-card');
+      }).join('');
+      html+='<div class="org-block">'+
+        '<div class="org-manager-label">Manager &amp; Team</div>'+
+        buildCard(mgr,'org-manager-card')+
+        '<div class="org-reports">'+reportCards+'</div>'+
+        '</div>';
+    });
+    // Mark all people who appeared as report cards under any manager block as rendered
+    // (catches ICs whose manager was rendered as a report card under a higher-tier node)
+    data.forEach(function(d){
+      if(rendered[d.manager||''])rendered[d.name]=true;
+    });
+    var solos=data.filter(function(d){return!rendered[d.name];});
+    if(solos.length){
+      html+='<div class="org-section-label">'+solos.length+' Individual Contributors</div>'+
+        '<div class="org-solo-grid">'+solos.map(function(d){return buildCard(d,'card');}).join('')+'</div>';
+    }
+    document.getElementById('app').innerHTML='<div style="padding:28px 40px">'+html+'</div>';
+    document.querySelectorAll('[data-name]').forEach(function(el){el.addEventListener('click',function(ev){if(ev.target.closest('a'))return;openModal(decodeURIComponent(el.dataset.name));});});
+    return;
+  }
+
+  // ── All other orgs: original logic ───────────────────────────────────────
+  var mgrFilter=cfg.filters.find(function(f){return f.key==='manager'||f.key==='srManager';});
+  if(mgrFilter){
+    var mgrEl=document.getElementById(mgrFilter.id);
+    if(mgrEl&&mgrEl.value){
+      var mgrName=mgrEl.value;
+      var alreadyIn=data.some(function(d){return d.name===mgrName;});
+      if(!alreadyIn){
+        var mgrRecord=DATA.find(function(d){return d.name===mgrName;});
+        if(mgrRecord) data=[mgrRecord].concat(data);
+      }
+    }
+  }
+  // Build lookup: name -> person, and reports map: manager name -> [reports]
+  var byName={};
+  data.forEach(function(d){ byName[d.name]=d; });
+  var reportsOf={};
+  data.forEach(function(d){
+    var m=d.manager||'';
+    if(!reportsOf[m])reportsOf[m]=[];
+    reportsOf[m].push(d);
+  });
+
+  // A person is a "manager node" if they have direct reports within the filtered set
+  var rendered={};
+  var html='';
+
+  // Topological sort — deepest managers first so sub-managers get their own
+  // block before their parent renders them as a report card.
+  var mgrNames=Object.keys(reportsOf).filter(function(m){return m&&byName[m];});
+  var mgrSet={};mgrNames.forEach(function(m){mgrSet[m]=true;});
+  function mgrDepth(name,seen){
+    if(!seen)seen={};if(seen[name])return 0;seen[name]=true;
+    var up=byName[name]?byName[name].manager:'';
+    return(up&&mgrSet[up])?1+mgrDepth(up,seen):0;
+  }
+  mgrNames.sort(function(a,b){
+    var da=mgrDepth(a),db=mgrDepth(b);
+    if(da!==db)return db-da;
+    return reportsOf[b].length-reportsOf[a].length;
+  });
+
+  mgrNames.forEach(function(mgrName){
+    var mgr=byName[mgrName];
+    var reports=reportsOf[mgrName];
+    rendered[mgrName]=true;
+
+    var reportCards=reports.map(function(r){
+      if(!mgrSet[r.name])rendered[r.name]=true;
+      return buildCard(r,'org-report-card');
+    }).join('');
+
+    html+='<div class="org-block">'+
+      '<div class="org-manager-label">Manager &amp; Team</div>'+
+      buildCard(mgr,'org-manager-card')+
+      '<div class="org-reports">'+reportCards+'</div>'+
+      '</div>';
+  });
+
+  // Remaining people with no reports in this set (individual contributors)
+  var solos=data.filter(function(d){return!rendered[d.name];});
+  if(solos.length){
+    html+='<div class="org-section-label">'+solos.length+' Individual Contributors</div>'+
+      '<div class="org-solo-grid">'+
+      solos.map(function(d){return buildCard(d,'card');}).join('')+
+      '</div>';
+  }
+
+  document.getElementById('app').innerHTML='<div style="padding:28px 40px">'+html+'</div>';
+  document.querySelectorAll('[data-name]').forEach(function(el){
+    el.addEventListener('click',function(ev){
+      if(ev.target.closest('a'))return;
+      openModal(decodeURIComponent(el.dataset.name));
+    });
+  });
+}
+
+function rGroups(data){
+  var cfg=CFG[ORG],groups={};
+  data.forEach(function(d){var k=d[cfg.grpKey]||'\u2014 Unassigned \u2014';if(!groups[k])groups[k]=[];groups[k].push(d);});
+  var html=Object.keys(groups).sort().map(function(grp){
+    var members=groups[grp];
+    var rows=members.map(function(d){
+      return'<tr data-name="'+encodeURIComponent(d.name)+'">'+
+        '<td style="padding:9px 14px;display:flex;align-items:center;gap:10px">'+av(d.name,28,11)+'<div><div style="font-weight:500;font-size:13px">'+e(d.name)+'</div><div style="color:var(--muted);font-size:11px">'+e(cfg.sub(d))+'</div></div></td>'+
+        '<td style="padding:9px 14px;font-size:12px;color:var(--muted)">'+e(d.segment||d.channel||'')+'</td>'+
+        '<td style="padding:9px 14px;font-size:12px;color:var(--muted)">'+e(d.location||d.homeLocation||d.province||'')+'</td>'+
+        '<td style="padding:9px 14px">'+(d.email?'<a class="email-link" href="mailto:'+e(d.email)+'" onclick="event.stopPropagation()">'+e(d.email)+'</a>':'')+'</td>'+
+        '</tr>';
+    }).join('');
+    return'<div class="group-section">'+
+      '<div class="group-header">'+av(grp,32,13)+'<div class="group-name">'+e(grp)+'</div><div class="group-count">'+members.length+'</div><svg class="group-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>'+
+      '<div class="group-rows"><table style="width:100%;border-collapse:collapse"><tbody>'+rows+'</tbody></table></div>'+
+      '</div>';
+  }).join('');
+  document.getElementById('app').innerHTML='<div style="padding:28px 40px">'+html+'</div>';
+  document.querySelectorAll('.group-header').forEach(function(gh){gh.addEventListener('click',function(){gh.classList.toggle('collapsed');gh.nextElementSibling.style.display=gh.classList.contains('collapsed')?'none':'';});});
+  document.querySelectorAll('tbody tr[data-name]').forEach(function(tr){tr.addEventListener('click',function(){openModal(decodeURIComponent(tr.dataset.name));});});
+}
+
+function renderMap(fd){
+  var app=document.getElementById('app');
+  var r1=Array.from(new Set(fd.map(function(d){return d.role;}).filter(Boolean))).sort().map(function(r){return'<option value="'+e(r)+'" '+(mf1===r?'selected':'')+'>'+e(r)+'</option>';}).join('');
+  var r2=Array.from(new Set(fd.map(function(d){return d.segment;}).filter(Boolean))).sort().map(function(s){return'<option value="'+e(s)+'" '+(mf2===s?'selected':'')+'>'+e(s)+'</option>';}).join('');
+  app.innerHTML='<div class="map-shell"><div id="map-container"><div id="leaflet-map"></div><div class="map-legend" id="map-legend"></div><div class="map-stats" id="map-stats"></div></div><div class="map-panel"><div class="map-panel-header"><div class="map-panel-title" id="panel-title">All Locations</div><div class="map-panel-sub" id="panel-sub">Click a marker to focus</div></div><div class="map-panel-filters"><input class="map-panel-search" id="panel-search" placeholder="Filter people\u2026" value="'+e(mq)+'"><div class="map-panel-selects"><select id="panel-f1"><option value="">All Roles</option>'+r1+'</select><select id="panel-f2"><option value="">All Segments</option>'+r2+'</select></div></div><div class="map-panel-list" id="panel-list"></div></div></div>';
+  initMap(fd);buildStats(fd);buildLegend();refreshList(fd,null);
+  setTimeout(function(){if(lmap)lmap.invalidateSize();},100);
+  document.getElementById('panel-search').addEventListener('input',function(ev){mq=ev.target.value;refreshList(fd,null);});
+  document.getElementById('panel-f1').addEventListener('change',function(ev){mf1=ev.target.value;refreshList(fd,null);});
+  document.getElementById('panel-f2').addEventListener('change',function(ev){mf2=ev.target.value;refreshList(fd,null);});
+}
+
+function initMap(data){
+  if(lmap){lmap.remove();lmap=null;lmarkers=[];}
+  var isCA=ORG==='canada';
+  var defCenter=isCA?[56.13,-106.35]:[39.5,-98.35];
+  var defZoom=isCA?4:4;
+  lmap=L.map('leaflet-map',{center:defCenter,zoom:defZoom});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap',maxZoom:18}).addTo(lmap);
+  var bl={};
+  data.forEach(function(d){var k=d.location||'?';if(!bl[k])bl[k]=[];bl[k].push(d);});
+  Object.keys(bl).forEach(function(loc){
+    var ppl=bl[loc];
+    var geo=isCA?LGEO[loc]:CDWGEO[loc];
+    if(!geo)return;
+    var n=ppl.length,sz=n>=100?56:n>=30?46:n>=10?38:n>=5?32:26;
+    var isV=isCA?(loc.toLowerCase().indexOf('virtual')!==-1):geo.v;
+    var col=isCA?pc(geo.prov):'#FF7023';
+    var ih='<div class="map-marker" style="width:'+sz+'px;height:'+sz+'px;font-size:'+(n>=100?13:12)+'px;background:linear-gradient(135deg,'+col+'dd,'+col+'88);border-style:'+(isV?'dashed':'solid')+';opacity:'+(isV?'0.8':'1')+'">'+n+'</div>';
+    var m=L.marker([geo.lat,geo.lng],{icon:L.divIcon({html:ih,className:'',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]})}).addTo(lmap);
+    m._loc=loc;m._ppl=ppl;m._geo=geo;
+    (function(loc,ppl,geo){m.on('click',function(){setLoc(loc,ppl,geo,data);});})(loc,ppl,geo);
+    lmarkers.push(m);
+  });
+}
+
+function setLoc(loc,ppl,geo,all){
+  aloc=loc;
+  lmarkers.forEach(function(m){var el=m.getElement();if(!el)return;var inn=el.querySelector('.map-marker');if(!inn)return;inn.classList.toggle('active',m._loc===loc);});
+  lmap.setView([geo.lat,geo.lng],Math.max(lmap.getZoom(),6),{animate:true});
+  document.getElementById('panel-title').textContent=geo.label;
+  var sub=ppl.length+' people';
+  if(ORG==='canada'&&geo.prov)sub+=' \u00b7 '+(PROV[geo.prov]||geo.prov);
+  document.getElementById('panel-sub').textContent=sub;
+  refreshList(all,ppl);
+}
+
+function fppl(ppl){var q=mq.toLowerCase(),r=mf1,s=mf2;return ppl.filter(function(d){if(r&&d.role!==r)return false;if(s&&d.segment!==s)return false;if(q){var h=[d.name,d.role,d.segment,d.manager].join(' ').toLowerCase();if(h.indexOf(q)===-1)return false;}return true;});}
+
+function prow(d){
+  var roleStr=e(d.titleGroup||d.role||'');
+  var titleStr=e(d.title||'');
+  var sub=roleStr;
+  if(titleStr&&titleStr!==roleStr)sub+=(sub?' \u00b7 ':'')+titleStr;
+  if(d.segment)sub+=(sub?' \u00b7 ':'')+e(d.segment);
+  return'<div class="map-person-row" data-name="'+encodeURIComponent(d.name)+'">'+av(d.name,28,10)+'<div class="map-person-info"><div class="map-person-name">'+e(d.name)+'</div><div class="map-person-role">'+sub+'</div></div>'+(d.email?'<a class="email-link" href="mailto:'+e(d.email)+'" onclick="event.stopPropagation()">&#x2709;</a>':'')+'</div>';
+}
+
+function refreshList(all,locPpl){
+  var list=document.getElementById('panel-list');
+  if(locPpl){
+    var p=fppl(locPpl);
+    list.innerHTML=p.length?p.map(prow).join(''):'<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px">No matches</div>';
+  }else{
+    var bl={};all.forEach(function(d){var k=d.location||'?';if(!bl[k])bl[k]=[];bl[k].push(d);});
+    var secs=Object.keys(bl).map(function(loc){return[loc,fppl(bl[loc])];}).filter(function(x){return x[1].length;}).sort(function(a,b){return b[1].length-a[1].length;});
+    list.innerHTML=secs.map(function(x){
+      var loc=x[0],ppl=x[1],geo=ORG==='canada'?LGEO[loc]:CDWGEO[loc];
+      var col=geo?(ORG==='canada'?pc(geo.prov):'#FF7023'):'#D0C8BA',lbl=geo?geo.label:loc,prov=geo&&geo.prov?geo.prov:'';
+      return'<div class="map-loc-header" data-lockey="'+encodeURIComponent(loc)+'"><div class="map-loc-dot" style="background:'+col+'"></div><div class="map-loc-name">'+e(lbl)+'</div>'+(prov?'<div class="map-loc-prov">'+e(prov)+'</div>':'')+'<div class="map-loc-count">'+ppl.length+'</div></div>'+ppl.map(prow).join('');
+    }).join('');
+    list.querySelectorAll('.map-loc-header').forEach(function(h){
+      h.addEventListener('click',function(){
+        var loc=decodeURIComponent(h.dataset.lockey),geo=ORG==='canada'?LGEO[loc]:CDWGEO[loc];
+        if(geo){var bl2={};all.forEach(function(d){var k=d.location||'?';if(!bl2[k])bl2[k]=[];bl2[k].push(d);});if(bl2[loc])setLoc(loc,bl2[loc],geo,all);}
+      });
+    });
+  }
+  list.querySelectorAll('.map-person-row').forEach(function(row){row.addEventListener('click',function(){openModal(decodeURIComponent(row.dataset.name));});});
+}
+
+function buildStats(data){
+  var el=document.getElementById('map-stats');if(!el)return;
+  var c={};
+  if(ORG==='canada'){data.forEach(function(d){if(d.province)c[d.province]=(c[d.province]||0)+1;});}
+  else{data.forEach(function(d){if(d.state)c[d.state]=(c[d.state]||0)+1;});}
+  var s=Object.keys(c).map(function(p){return[p,c[p]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,8);
+  var mx=s.length?s[0][1]:1;
+  var title=ORG==='canada'?'By Province':'Top States';
+  el.innerHTML='<div class="map-stats-title">'+title+'</div>'+s.map(function(x){
+    var col=ORG==='canada'?pc(x[0]):'#FF7023';
+    return'<div class="map-stat-row"><div class="map-stat-label">'+x[0]+'</div><div class="map-stat-bar-wrap"><div class="map-stat-bar" style="width:'+Math.round(x[1]/mx*100)+'%;background:'+col+'"></div></div><div class="map-stat-num">'+x[1]+'</div></div>';
+  }).join('');
+}
+
+function buildLegend(){
+  var el=document.getElementById('map-legend');if(!el)return;
+  if(ORG==='canada'){
+    var provs=Object.keys(PC).filter(function(k){return k!=='def';});
+    el.innerHTML='<div class="map-legend-title">Province</div>'+provs.map(function(p){return'<div class="map-legend-item"><div class="map-legend-dot" style="background:'+PC[p]+'"></div><span>'+(PROV[p]||p)+'</span></div>';}).join('')+'<div style="margin-top:8px;padding-top:6px;border-top:1px solid var(--border)"><div class="map-legend-item"><div style="width:9px;height:9px;border:2px dashed rgba(255,255,255,.4);border-radius:50%;flex-shrink:0"></div><span>Virtual</span></div></div>';
+  }else{
+    el.innerHTML='<div class="map-legend-title">Marker size</div>'
+      +'<div class="map-legend-item"><div class="map-legend-dot" style="width:14px;height:14px;background:#FF7023"></div><span>50+ people</span></div>'
+      +'<div class="map-legend-item"><div class="map-legend-dot" style="width:10px;height:10px;background:#FF7023"></div><span>10\u201349</span></div>'
+      +'<div class="map-legend-item"><div class="map-legend-dot" style="width:7px;height:7px;background:#FF7023"></div><span>1\u20139</span></div>'
+      +'<div style="margin-top:8px;padding-top:6px;border-top:1px solid var(--border)"><div class="map-legend-item"><div style="width:9px;height:9px;border:2px dashed rgba(255,255,255,.4);border-radius:50%;flex-shrink:0"></div><span>Virtual</span></div></div>';
+  }
+}
+
+// ── ORG TREE VIEW (Hybrid: cards for L0-L1, vertical list below) ──
+var _treeCollapsed={};
+function rTree(data){
+  var byName={};
+  data.forEach(function(d){byName[d.name]=d;});
+
+  var childrenOf={};
+  data.forEach(function(d){
+    var mgr=d.manager||'';
+    if(mgr && mgr!==d.name){
+      if(!childrenOf[mgr])childrenOf[mgr]=[];
+      childrenOf[mgr].push(d);
+    }
+  });
+
+  var roots=data.filter(function(d){
+    var mgr=d.manager||'';
+    return !mgr || !byName[mgr];
+  });
+
+  function countDesc(name){
+    var kids=childrenOf[name]||[];
+    var n=kids.length;
+    kids.forEach(function(k){n+=countDesc(k.name);});
+    return n;
+  }
+
+  function sortKids(arr){
+    return arr.slice().sort(function(a,b){
+      var ha=(childrenOf[a.name]||[]).length?1:0;
+      var hb=(childrenOf[b.name]||[]).length?1:0;
+      if(hb!==ha)return hb-ha;
+      return countDesc(b.name)-countDesc(a.name);
+    });
+  }
+
+  roots=sortKids(roots);
+
+  // ── Vertical list node (depth 2+) ──
+  function renderListNode(d,depth){
+    var kids=sortKids(childrenOf[d.name]||[]);
+    var hasKids=kids.length>0;
+    // Default: collapsed. _treeCollapsed[name]===true means open.
+    var isOpen=_treeCollapsed[d.name]===true;
+
+    var indent=Math.max(0,depth-2)*20;
+    var seg=d.segment||d.channel||'';
+    var html='<div class="vtree-row" style="padding-left:'+indent+'px">';
+    html+='<div class="vtree-node" data-name="'+encodeURIComponent(d.name)+'">';
+    if(hasKids){
+      html+='<div class="vtree-toggle" data-person="'+encodeURIComponent(d.name)+'">'+(isOpen?'&#x25BE;':'&#x25B8;')+'</div>';
+    } else {
+      html+='<div class="vtree-toggle-spacer"></div>';
+    }
+    html+=av(d.name,28,10,seg);
+    html+='<div class="vtree-info">';
+    html+='<div class="vtree-name">'+e(d.name)+'</div>';
+    html+='<div class="vtree-sub">'+e(d.title||d.titleGroup||'');
+    if(hasKids) html+=' <span class="vtree-badge">'+kids.length+'</span>';
+    html+='</div></div>';
+    if(d.email) html+='<a class="email-link" href="mailto:'+e(d.email)+'" onclick="event.stopPropagation()" style="margin-left:auto;flex-shrink:0">&#x2709;</a>';
+    html+='</div>';
+
+    if(hasKids && isOpen){
+      html+='<div class="vtree-children">';
+      kids.forEach(function(kid){ html+=renderListNode(kid,depth+1); });
+      html+='</div>';
+    }
+    html+='</div>';
+    return html;
+  }
+
+  // ── Build HTML ──
+  var app=document.getElementById('app');
+  var totalNodes=data.length;
+  var html='<div class="tree-container">';
+  html+='<div style="margin-bottom:18px;font-family:\'DM Mono\',monospace;font-size:11px;color:var(--muted);letter-spacing:.06em">'+
+    'ORG TREE &middot; '+totalNodes.toLocaleString()+' people &middot; '+roots.length+' top-level nodes</div>';
+
+  // Render each root as a card section
+  roots.forEach(function(root){
+    var kids=sortKids(childrenOf[root.name]||[]);
+    var desc=countDesc(root.name);
+    var seg=root.segment||root.channel||'';
+
+    // Root card (L0)
+    html+='<div class="tree-section">';
+    html+='<div class="tree-root-card" data-name="'+encodeURIComponent(root.name)+'">';
+    html+='<div style="display:flex;align-items:center;gap:12px">';
+    html+=av(root.name,44,16,seg);
+    html+='<div>';
+    html+='<div style="font-weight:500;font-size:15px">'+e(root.name)+'</div>';
+    html+='<div style="font-size:11px;color:var(--muted);margin-top:2px">'+e(root.title||root.titleGroup||'')+'</div>';
+    html+='</div>';
+    if(desc) html+='<div style="margin-left:auto;font-family:\'DM Mono\',monospace;font-size:11px;color:var(--accent)">'+desc+' total</div>';
+    html+='</div>';
+    html+='</div>';
+
+    // L1 children as cards in a grid
+    if(kids.length){
+      html+='<div class="tree-l1-grid">';
+      kids.forEach(function(kid){
+        var subKids=sortKids(childrenOf[kid.name]||[]);
+        var subDesc=countDesc(kid.name);
+        var kSeg=kid.segment||kid.channel||'';
+        var isOpen=_treeCollapsed[kid.name]===true;
+
+        html+='<div class="tree-l1-block">';
+        html+='<div class="tree-l1-card" data-name="'+encodeURIComponent(kid.name)+'">';
+        html+='<div style="display:flex;align-items:center;gap:10px">';
+        html+=av(kid.name,34,12,kSeg);
+        html+='<div style="flex:1;min-width:0">';
+        html+='<div style="font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+e(kid.name)+'</div>';
+        html+='<div style="font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+e(kid.title||kid.titleGroup||'')+'</div>';
+        html+='</div>';
+        html+='</div>';
+        if(subKids.length){
+          html+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">';
+          html+='<span style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--muted)">'+subKids.length+' direct &middot; '+subDesc+' total</span>';
+          html+='</div>';
+        }
+        html+='</div>';
+
+        // L2+ expand button and vertical list (outside the card div)
+        if(subKids.length){
+          html+='<div class="tree-l1-expand-row">';
+          html+='<div class="tree-l1-expand" data-person="'+encodeURIComponent(kid.name)+'" title="'+(isOpen?'Collapse':'Expand')+' team">'+(isOpen?'&#x25B4; Collapse':'&#x25BE; Expand')+' ('+subKids.length+')</div>';
+          html+='</div>';
+        }
+
+        // L2+ vertical list
+        if(subKids.length && isOpen){
+          html+='<div class="vtree-list">';
+          subKids.forEach(function(sub){ html+=renderListNode(sub,2); });
+          html+='</div>';
+        }
+        html+='</div>';
+      });
+      html+='</div>';
+    }
+    html+='</div>';
+  });
+
+  html+='</div>';
+  app.innerHTML=html;
+
+  // ── Wire events ──
+  // Root cards → modal
+  app.querySelectorAll('.tree-root-card').forEach(function(card){
+    card.addEventListener('click',function(){ openModal(decodeURIComponent(card.dataset.name)); });
+  });
+
+  // L1 cards → modal
+  app.querySelectorAll('.tree-l1-card').forEach(function(card){
+    card.addEventListener('click',function(){
+      openModal(decodeURIComponent(card.dataset.name));
+    });
+  });
+
+  // L1 expand buttons → toggle vertical list
+  app.querySelectorAll('.tree-l1-expand').forEach(function(btn){
+    btn.addEventListener('click',function(ev){
+      ev.preventDefault();
+      var person=decodeURIComponent(btn.dataset.person);
+      _treeCollapsed[person]=!_treeCollapsed[person];
+      rTree(getFiltered());
+    });
+  });
+
+  // Vertical tree toggles
+  app.querySelectorAll('.vtree-toggle').forEach(function(tog){
+    tog.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      var person=decodeURIComponent(tog.dataset.person);
+      _treeCollapsed[person]=!_treeCollapsed[person];
+      rTree(getFiltered());
+    });
+  });
+
+  // Vertical tree node clicks → modal
+  app.querySelectorAll('.vtree-node').forEach(function(node){
+    node.addEventListener('click',function(ev){
+      if(ev.target.closest('.vtree-toggle'))return;
+      if(ev.target.closest('a'))return;
+      openModal(decodeURIComponent(node.dataset.name));
+    });
+  });
+}
+
+function openModal(name){
+  var d=DATA.find(function(p){return p.name===name;});if(!d)return;
+  var cfg=CFG[ORG],mh=cfg.mhdr(d);
+  document.getElementById('modal-header').innerHTML=av(d.name,52,20)+'<div><div class="modal-name">'+e(d.name)+'</div><div class="modal-title-text">'+e(mh.s)+'</div><div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">'+mh.t+'</div></div><button class="modal-close" id="mcb">&#x2715;</button>';
+  document.getElementById('modal-body').innerHTML=cfg.mbody(d);
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('mcb').onclick=closeModal;
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+document.getElementById('modal-overlay').addEventListener('click',function(ev){if(ev.target===document.getElementById('modal-overlay'))closeModal();});
+document.addEventListener('keydown',function(ev){if(ev.key==='Escape')closeModal();});
+
+document.querySelectorAll('.org-btn').forEach(function(b){b.addEventListener('click',function(){switchOrg(b.dataset.org);});});
+['table','cards','groups','map','tree'].forEach(function(v){
+  var btn=document.getElementById('btn-'+v);if(!btn)return;
+  btn.addEventListener('click',function(){VIEW=v;document.querySelectorAll('.view-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');render();});
+});
+var _searchDebounce=null;
+document.getElementById('search').addEventListener('input',function(){
+  clearTimeout(_searchDebounce);
+  _searchDebounce=setTimeout(function(){
+    requestAnimationFrame(function(){
+      refreshFilters(null);
+      render();
+    });
+  },150);
+});
+// Account search: Only search on Enter key
+document.getElementById('acct-search').addEventListener('keydown',function(ev){
+  if(ev.key==='Enter'){
+    refreshFilters(null);
+    render();
+  }
+});
+document.getElementById('clear-filters').addEventListener('click',function(){document.getElementById('search').value='';document.getElementById('acct-search').value='';document.querySelectorAll('#filter-container select').forEach(function(s){s.value='';});mq='';mf1='';mf2='';refreshFilters(null);render();});
+
+// ── KEYBOARD SHORTCUT: / to focus search ──────────────────────
+document.addEventListener('keydown',function(ev){
+  if(ev.key==='/' && !ev.ctrlKey && !ev.metaKey){
+    var active=document.activeElement;
+    if(active&&(active.tagName==='INPUT'||active.tagName==='TEXTAREA'||active.tagName==='SELECT'))return;
+    ev.preventDefault();
+    document.getElementById('search').focus();
+  }
+});
+
+// ── THEME TOGGLE ──────────────────────────────────────────────
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  localStorage.setItem('cdw-theme',t);
+  var isDark=t==='dark';
+  document.getElementById('theme-icon-dark').style.display=isDark?'none':'block';
+  document.getElementById('theme-icon-light').style.display=isDark?'block':'none';
+  // Update org background
+  var bg=isDark?ORG_BG_DARK:ORG_BG_LIGHT;
+  document.documentElement.style.setProperty('--bg',bg[ORG]||bg.cdw);
+}
+document.getElementById('theme-toggle').addEventListener('click',function(){setTheme(getTheme()==='dark'?'light':'dark');});
+// Restore saved theme, default to light
+(function(){var saved=localStorage.getItem('cdw-theme');setTheme(saved||'light');})();
+
+switchOrg('cdw');
+
+// ── TOAST ────────────────────────────────────────────────────────
+var toastTimer=null;
+function showToast(msg,col){
+  var t=document.getElementById('toast'),dot=t.querySelector('div'),sp=document.getElementById('toast-msg');
+  dot.style.background=col||'#8FA596';sp.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){t.classList.remove('show');},3200);
+}
+
+// ── MERGE LOGIC ───────────────────────────────────────────────────
+var MERGE_KEY={
+  cdw:   function(r){return(r.email||'').toLowerCase()||r.name;},
+  dcs:   function(r){return(r.email||'').toLowerCase()||r.name;},
+  canada:function(r){return(r.email||'').toLowerCase()||r.name;}
+};
+var KEY_MAP={
+  'coworkername':'name','emailaddress':'email','directphone':'phone',
+  'coworkerlocationdescription':'location','coworkertitledescription':'title',
+  'coworkertitlegroupdescription':'titleGroup','losmonth':'losMonths',
+  'losgroupdescription':'losGroup','academyamflagdescription':'academyFlag',
+  'managertitle':'managerTitle',
+  'managere-mail':'managerEmail','manageremail':'managerEmail',
+  'manageremailaddress':'managerEmail',
+  'directoremail':'directorEmail','director email':'directorEmail',
+  'director title':'directorTitle','director':'directorRaw',
+  'manager':'managerRaw',
+  'solutionarea':'solutionArea','homelocation':'homeLocation',
+  'statescovers':'statesCovers','officelocation':'officeLocation',
+  'srmanager':'srManager','dept':'dept','province':'province','role':'role',
+  'sector':'sector','segment':'segment','channel':'channel',
+  'tier':'tier','region':'region','area':'area','district':'district',
+  // DCS org spreadsheet column aliases (DCS_Org_March_2026.xlsx format)
+  'hicoworker':'name',
+  'email':'email',
+  'role/title':'title',
+  'primarysolutionarea':'solutionArea',
+  'primarysegmentcoverage/areaofresponsibility(aor)':'segment',
+  'statescoworkerscovers':'statesCovers',
+  'statescoworkercovers':'statesCovers',
+  'cdwofficelocation':'officeLocation'
+};
+
+// Clean a name: title-case, strip trailing codes like "(9728)"
+function titleCaseWord(w){
+  if(!w) return '';
+  if(w.length<=3 && w===w.toUpperCase() && /^[A-Z]+$/.test(w)) return w;
+  var lower=w.toLowerCase();
+  if(/^mc[a-z]/.test(lower)) return 'Mc'+lower[2].toUpperCase()+lower.slice(3);
+  if(/^mac[a-z]/.test(lower)) return 'Mac'+lower[3].toUpperCase()+lower.slice(4);
+  if(/^[odl]'[a-z]/i.test(w)) return w[0].toUpperCase()+"'"+w[2].toUpperCase()+lower.slice(3);
+  if(w.indexOf('-')>0) return w.split('-').map(function(p){return titleCaseWord(p);}).join('-');
+  return lower[0].toUpperCase()+lower.slice(1);
+}
+function cleanName(s){
+  if(!s) return '';
+  return String(s)
+    .replace(/^_+|_+$/g,'')
+    .replace(/_+/g,' ')
+    .replace(/\s*\([^)]*\)\s*$/,'')
+    .trim()
+    .split(/\s+/).map(titleCaseWord).join(' ');
+}
+function cleanPersonName(s){
+  if(!s) return '';
+  return String(s)
+    .replace(/^_+|_+$/g,'')
+    .replace(/_+/g,' ')
+    .replace(/^\([^)]*\)\s*/,'')
+    .trim()
+    .split(/\s+/).map(titleCaseWord).join(' ');
+}
+
+// ── DCS Zoo Doc normaliser ────────────────────────────────────────
+// Handles: HI_Presales_Zoo_Doc format
+// Columns: Director Name | Sr Manager Name | Manager Name | Coworker Name |
+//          Coworker Title | Email | Presales or Practice | Segment/Vertical |
+//          AOR | Domain | CDW Office Location | Home Location
+function normaliseDCSRows(rows){
+  function cl(s){
+    if(!s||String(s).trim()==='nan'||String(s).trim()==='-')return '';
+    return String(s).replace(/[\u200b\u200c\u200d\xa0\u2060]+/g,' ').split(/\s+/).join(' ').trim();
+  }
+  function pn(s){
+    s=cl(s);
+    if(!s)return '';
+    return s.split(' ').filter(Boolean).map(titleCaseWord).join(' ');
+  }
+  function parseStates(s){
+    if(!s||s==='-')return [];
+    return String(s).split(/[,;&\/]+/).map(function(p){return p.trim();}).filter(function(p){return p&&p!=='-';});
+  }
+
+  // Detect Zoo Doc by checking for its distinctive column names (use startsWith to handle trailing spaces/extra text)
+  function normKey(k){return k.toLowerCase().replace(/[^a-z0-9]/g,'');}
+  var sampleKeys=rows.length?Object.keys(rows[0]).map(normKey):[];
+  var isZooDoc=sampleKeys.some(function(k){return k==='coworkername';})&&sampleKeys.some(function(k){return k==='directorname';});
+  var isOldDCS=sampleKeys.some(function(k){return k==='hicoworker';});
+
+  if(!isZooDoc&&!isOldDCS){return null;} // not a DCS file — fall through to normaliseRows
+
+  // Helper: get row value by loose column name match (handles trailing spaces, extra text)
+  function get(row,target){
+    var t=normKey(target);
+    var keys=Object.keys(row);
+    for(var i=0;i<keys.length;i++){if(normKey(keys[i])===t||normKey(keys[i]).indexOf(t)===0)return row[keys[i]];}
+    return '';
+  }
+
+  return rows.map(function(row){
+    var name,email,title,manager,srMgr,director,segment,aor,solArea,office,home,domain;
+
+    if(isZooDoc){
+      name      = pn(get(row,'Coworker Name'));
+      email     = cl(get(row,'Email')).toLowerCase();
+      title     = cl(get(row,'Coworker Title'));
+      manager   = pn(get(row,'Manager Name'));
+      srMgr     = pn(get(row,'Sr Manager Name'));
+      director  = pn(get(row,'Director Name'));
+      segment   = cl(get(row,'Segment/Vertical')||get(row,'Segment'));
+      aor       = cl(get(row,'AOR'));
+      solArea   = cl(get(row,'Presales or Practice'))||'Data Center Solutions (DCS)';
+      office    = cl(get(row,'CDW Office Location'));
+      home      = cl(get(row,'Home Location'));
+      domain    = cl(get(row,'Domain'));
+    } else {
+      // Old DCS format (HI Coworker / Manager Name columns)
+      name      = pn(row['HI Coworker']||row['Name']||'');
+      email     = cl(row['Email']||'').toLowerCase();
+      title     = cl(row['Role/Title']||row['Title']||'');
+      manager   = pn(row['Manager']||row['Manager Name']||'');
+      srMgr     = pn(row['Sr Manager']||'');
+      director  = pn(row['Director']||'');
+      segment   = cl(row['Primary Segment Coverage / Area of Responsibility (AOR)']||row['Segment']||'');
+      aor       = cl(row['States Coworker Covers']||'');
+      solArea   = cl(row['Primary Solution Area']||'Data Center Solutions (DCS)');
+      office    = cl(row['CDW Office Location']||'');
+      home      = cl(row['Home Location']||'');
+      domain    = cl(row['Domain']||'DCS');
+    }
+
+    // Skip blank rows and TBH placeholders
+    if(!name&&!email)return null;
+    if(name.toLowerCase()==='tbh')return null;
+
+    // Normalise known name spelling variants to match canonical JSON names
+    var DCS_NAME_ALIASES={
+      'jessica keehnen':'Jessica Keehan',
+      'pete mccloughan':'Pete McCloughan',
+      'leslie fielding-russell':'Leslie Fielding-Russell',
+      'alejandro roman':'Alejandro Roman',
+      'kathryn averyheart':'Kat Averyheart'
+    };
+    var nameLower=name.toLowerCase();
+    if(DCS_NAME_ALIASES[nameLower])name=DCS_NAME_ALIASES[nameLower];
+
+    // Also apply aliases to manager/srManager/director name references
+    if(DCS_NAME_ALIASES[manager.toLowerCase()])manager=DCS_NAME_ALIASES[manager.toLowerCase()];
+    if(DCS_NAME_ALIASES[srMgr.toLowerCase()])srMgr=DCS_NAME_ALIASES[srMgr.toLowerCase()];
+    if(DCS_NAME_ALIASES[director.toLowerCase()])director=DCS_NAME_ALIASES[director.toLowerCase()];
+
+    // Normalise manager fields
+    if(!manager||manager==='-')manager='-';
+    if(!srMgr||srMgr==='-')srMgr='';
+    if(!director||director==='-')director='';
+
+    // Normalise solution area
+    if(/pre.?sales|presales/i.test(solArea))solArea='Data Center Solutions (DCS)';
+
+    return {
+      name:           name,
+      email:          email,
+      title:          title,
+      manager:        manager,
+      srManager:      srMgr,
+      director:       director,
+      segment:        segment,
+      solutionArea:   solArea,
+      // homeLocation, statesCovers, coverageParsed: always blank in incoming so
+      // mergeRecords ALWAYS preserves the existing JSON values (which are richer).
+      // Only fills these if the existing JSON record has no value at all.
+      homeLocation:   '',
+      statesCovers:   '',
+      coverageParsed: [],
+      // officeLocation from Zoo Doc is fine to update — not manually curated
+      officeLocation: office,
+      // Zoo Doc AOR stored separately so it's available if JSON has nothing
+      _zooAOR:        aor,
+      _zooHome:       home,
+      domain:         domain
+    };
+  }).filter(function(r){return r&&(r.name||r.email);});
+}
+
+function normaliseRows(rows){
+  var out=rows.map(function(row){
+    var rec={};
+    Object.keys(row).forEach(function(k){
+      var norm=k.trim().toLowerCase().replace(/\s+/g,'');
+      var mapped=KEY_MAP[norm]||KEY_MAP[k.trim().toLowerCase()]||k.trim();
+      rec[mapped]=row[k]!=null?String(row[k]).trim():'';
+    });
+    // Clean names
+    if(rec.name)rec.name=cleanPersonName(rec.name);
+    if(rec.managerRaw){rec.manager=cleanName(rec.managerRaw);delete rec.managerRaw;}
+    if(rec.directorRaw){rec.director=cleanName(rec.directorRaw);delete rec.directorRaw;}
+    // Extract state from location like "Virtual - Arizona (VIRTUAL - AZ)"
+    if(rec.location&&!rec.state){
+      var sm=rec.location.match(/\((?:VIRTUAL\s*-\s*)?([A-Z]{2})\)$/);
+      if(sm)rec.state=sm[1];
+      rec.location=rec.location.replace(/\s*\([^)]*\)\s*$/,'').trim();
+    }
+    return rec;
+  });
+  // Replace 'Unknown' titleGroup with actual title; filter junk rows and non-sales
+  out.forEach(function(r){
+    if(r.titleGroup&&r.titleGroup.trim().toLowerCase()==='unknown'){
+      r.titleGroup=r.title&&r.title.trim()?r.title.trim():'Other';
+    }
+  });
+  // Patterns that indicate non-person/house/bot accounts
+  var JUNK_NAME=/\b(house\s*ac(?:ct|count)|hse\s*acct?|houseacct|donotdelete|do\s*not\s*delete|rpa\s*bot|rpabot|salestrainee|sales\s*trainee|placeholder|vacant|open\s*req|temp\d*\s*temp\d*|temporary\s*sales|qa\s*sales|system\s*engineer\s*grp|fncl\s*svcs|hc\s*ent\s*(?:east|west)|nonprofit\s*ne|navy\s*hogan|k-12\s*(?:small|tad|enterp)|edca|edch|edpr|edxs|scck|soh1|soho|sh80|sxrx|rslr|bbg1|bsk1|ignw|dono|uscb|usps\s*adept|us\s*(?:air\s*force|army|navy)|dod(?:\s*advapgm)?|rippling\s*house|gifting\s*house|landover|leesburg|dc\s*metro|congresional|consumer\s*house|sys\s*integrat|hc\s*payor)\b/i;
+  var JUNK_START=/^(core\s+hse|all\s+|total\s+|group\s+|houseacct|rpabot|donotdelete)/i;
+  return out.filter(function(r){
+    if(!r.name&&!r.email)return false;
+    if(r.sector&&r.sector.toLowerCase()!=='sales')return false;
+    var nm=r.name||'';
+    if(JUNK_NAME.test(nm)||JUNK_START.test(nm))return false;
+    // All-caps names longer than 20 chars are usually account placeholders
+    if(nm===nm.toUpperCase()&&nm.replace(/\s/g,'').length>20)return false;
+    // Filter out contractors/affiliates/vendors (title ends with - EXT)
+    var ttl=r.title||'';
+    if(/[-–]\s*EXT\s*$/i.test(ttl))return false;
+    // Filter out cards with no email AND (no title OR unknown/other title)
+    if(!r.email){
+      var tg=(r.titleGroup||'').trim().toLowerCase();
+      if(!ttl||!tg||tg==='unknown'||tg==='other'||tg==='n/a'||tg==='tbd')return false;
+    }
+    return true;
+  });
+}
+
+function mergeRecords(existing,incoming,org,incomingRoles){
+  var keyFn=MERGE_KEY[org];
+  var exMap={};
+  existing.forEach(function(r){exMap[keyFn(r)]=r;});
+  // For Canada: preserve ALL existing records not matched by key —
+  // partial uploads (e.g. managers only) must never delete other records
+  var isCanada=org==='canada';
+  var touched={};
+  var merged=incoming.map(function(r){
+    var key=keyFn(r);
+    touched[key]=true;
+    var old=exMap[key];
+    if(!old){
+      // New record — apply Zoo Doc AOR/home directly since nothing to preserve
+      if(org==='dcs'){
+        if(!r.homeLocation&&r._zooHome)r.homeLocation=r._zooHome;
+        if(!r.statesCovers&&r._zooAOR)r.statesCovers=r._zooAOR;
+        if((!r.coverageParsed||!r.coverageParsed.length)&&r._zooAOR){
+          r.coverageParsed=r._zooAOR.split(/[,;&\/]+/).map(function(p){return p.trim();}).filter(Boolean);
+        }
+        delete r._zooAOR; delete r._zooHome;
+      }
+      return r;
+    }
+    var out=Object.assign({},r);
+    Object.keys(old).forEach(function(k){
+      if(!(k in out)||(out[k]===''||out[k]===null||out[k]===undefined)){out[k]=old[k];}
+    });
+    // DCS: apply Zoo Doc AOR/home only if still blank after JSON merge
+    if(org==='dcs'){
+      if(!out.homeLocation&&out._zooHome)out.homeLocation=out._zooHome;
+      if(!out.statesCovers&&out._zooAOR)out.statesCovers=out._zooAOR;
+      if((!out.coverageParsed||!out.coverageParsed.length)&&out._zooAOR){
+        out.coverageParsed=out._zooAOR.split(/[,;&\/]+/).map(function(p){return p.trim();}).filter(Boolean);
+      }
+      delete out._zooAOR; delete out._zooHome;
+    }
+    return out;
+  });
+  // Always preserve existing records not matched by the incoming file
+  // For Canada this covers all unmatched records regardless of role
+  // For CDW/DCS a full export is expected so unmatched = truly removed
+  if(isCanada||org==='dcs'){
+    existing.forEach(function(r){
+      if(!touched[keyFn(r)]) merged.push(r);
+    });
+  }
+  var added=0,updated=0;
+  incoming.forEach(function(r){if(exMap[keyFn(r)])updated++;else added++;});
+  // Removed: for Canada always 0 (unmatched records are preserved above)
+  // For CDW/DCS count records genuinely absent from the incoming file
+  var removed=(isCanada||org==='dcs')?0:existing.filter(function(r){return!touched[keyFn(r)];}).length;
+  return{data:merged,added:added,updated:updated,removed:removed};
+}
+
+// ── UPDATER MODAL ─────────────────────────────────────────────────
+var pendingMerge=null;
+
+function updSetProgress(pct,msg){
+  document.getElementById('upd-prog-bar').style.width=pct+'%';
+  document.getElementById('upd-progress-msg').textContent=msg;
+  var pctEl=document.getElementById('upd-prog-pct');
+  if(pctEl)pctEl.textContent=pct+'%';
+}
+
+function updReset(){
+  pendingMerge=null;
+  document.getElementById('upd-drop-step').style.display='block';
+  document.getElementById('upd-progress').style.display='none';
+  document.getElementById('upd-summary').style.display='none';
+  document.getElementById('upd-drop').style.borderColor='#71584C';
+  document.getElementById('upd-file').value='';
+  var rb=document.getElementById('upd-retry-btn');if(rb)rb.style.display='none';
+  var msgEl=document.getElementById('upd-progress-msg');
+  msgEl.textContent='Reading file\u2026';msgEl.style.color='#D0C8BA';
+  document.getElementById('upd-prog-bar').style.cssText='height:100%;width:0%;background:linear-gradient(90deg,#BD673D,#FF7023);border-radius:6px;transition:width .35s ease;';
+  document.getElementById('upd-prog-pct').textContent='0%';
+  var ps=document.getElementById('upd-push-status');if(ps)ps.textContent='';
+}
+
+function updLoadSheetJS(cb){
+  if(typeof XLSX!=='undefined'){cb();return;}
+  var s=document.createElement('script');
+  s.src='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+  s.onload=function(){cb();};
+  s.onerror=function(){
+    // fallback to cdnjs
+    var s2=document.createElement('script');
+    s2.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s2.onload=function(){cb();};
+    s2.onerror=function(){
+      alert('Could not load the spreadsheet library. Check your internet connection and try again.');
+    };
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s);
+}
+
+function updOpen(){
+  updReset();
+  document.getElementById('upd-modal-meta').textContent='Loading new data for '+CFG[ORG].eyebrow.replace(/\u00b7/g,'\u00b7');
+  document.getElementById('upd-modal-overlay').classList.add('open');
+  // Pre-load SheetJS in background so it's ready when the user picks a file
+  updLoadSheetJS(function(){});
+}
+function updClose(){document.getElementById('upd-modal-overlay').classList.remove('open');}
+
+document.getElementById('upd-btn').addEventListener('click',updOpen);
+document.getElementById('upd-modal-close').addEventListener('click',updClose);
+document.getElementById('upd-cancel-btn').addEventListener('click',updReset);
+document.getElementById('upd-modal-overlay').addEventListener('click',function(ev){if(ev.target===this)updClose();});
+
+var updDrop=document.getElementById('upd-drop');
+updDrop.addEventListener('click',function(){document.getElementById('upd-file').click();});
+updDrop.addEventListener('mouseover',function(){updDrop.style.borderColor='#FF7023';updDrop.style.background='rgba(255,112,35,.06)';});
+updDrop.addEventListener('mouseout',function(){updDrop.style.borderColor='#71584C';updDrop.style.background='';});
+updDrop.addEventListener('dragover',function(ev){ev.preventDefault();updDrop.style.borderColor='#FF7023';updDrop.style.background='rgba(255,112,35,.06)';});
+updDrop.addEventListener('dragleave',function(){updDrop.style.borderColor='#71584C';updDrop.style.background='';});
+updDrop.addEventListener('drop',function(ev){ev.preventDefault();updDrop.style.borderColor='#71584C';updDrop.style.background='';var files=ev.dataTransfer.files;if(files.length)updProcessFiles(files);});
+document.getElementById('upd-file').addEventListener('change',function(ev){var files=ev.target.files;if(files.length)updProcessFiles(files);});
+
+function updProcessFiles(fileList){
+  var files=Array.from(fileList).filter(function(f){
+    var ext=f.name.split('.').pop().toLowerCase();
+    return ext==='xlsx'||ext==='xls';
+  });
+  if(!files.length){showToast('Please select .xlsx or .xls files','#DEA193');return;}
+  console.log('[UPD] files:',files.map(function(f){return f.name;}));
+  document.getElementById('upd-drop-step').style.display='none';
+  document.getElementById('upd-progress').style.display='block';
+  updSetProgress(10,'Loading spreadsheet library…');
+  updLoadSheetJS(function(){
+    console.log('[UPD] SheetJS ready');
+    updSetProgress(15,'Reading files…');
+    updDoReadAll(files);
+  });
+}
+
+function updDoReadAll(files){
+  // Read all files, then combine and process
+  var results=[], done=0;
+  files.forEach(function(file, idx){
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      results[idx]={name:file.name, data:ev.target.result};
+      done++;
+      updSetProgress(15+Math.round(25*done/files.length),'Reading '+done+' of '+files.length+' files\u2026');
+      if(done===files.length) updCombineAndProcess(results);
+    };
+    reader.onerror=function(){
+      document.getElementById('upd-progress-msg').textContent='\u26a0\ufe0f Failed to read '+file.name;
+      document.getElementById('upd-progress-msg').style.color='#DEA193';
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// Derive Canada role from filename: _AMs_ -> Account Manager, etc.
+function canadaRoleFromFilename(name){
+  var n=name.toLowerCase();
+  if(n.indexOf('_ams_')>-1||n.indexOf('_am_')>-1) return 'Account Manager';
+  if(n.indexOf('_ataes_')>-1||n.indexOf('_atae_')>-1) return 'ATAE';
+  if(n.indexOf('_faes_')>-1||n.indexOf('_fae_')>-1) return 'FAE';
+  if(n.indexOf('_mgrs_')>-1||n.indexOf('_mgr_')>-1) return 'Manager';
+  if(n.indexOf('_mdc_')>-1||n.indexOf('mdc_fsa')>-1||n.indexOf('mdc_org')>-1) return 'MDC';
+  return '';
+}
+function isMDCFile(name){
+  var n=name.toLowerCase();
+  return n.indexOf('_mdc_')>-1||n.indexOf('mdc_fsa')>-1||n.indexOf('mdc_org')>-1;
+}
+
+// Derive segment from deptDesc
+function canadaSegmentFromDept(dept){
+  if(!dept) return '';
+  var d=dept.toUpperCase();
+  if(d.indexOf('EDU')>-1) return 'Education';
+  if(d.indexOf('GOV')>-1||d.indexOf('MUN')>-1) return 'Government';
+  if(d.indexOf('HEALTH')>-1) return 'Healthcare';
+  if(d.indexOf('SB')>-1) return 'Small Business';
+  if(d.indexOf('ENT')>-1) return 'Enterprise';
+  if(d.indexOf('EAST')>-1) return 'Commercial East';
+  if(d.indexOf('WEST')>-1) return 'Commercial West';
+  if(d.indexOf('QC')>-1||d.indexOf('MTL')>-1||d.indexOf('QUEBEC')>-1) return 'Commercial Quebec';
+  if(d.indexOf('MDC')>-1) return 'Modern Data Center';
+  return 'Commercial';
+}
+
+// Extract province code from location string e.g. "Toronto - West Mall - ON" -> "ON"
+function canadaProvinceFromLocation(loc){
+  if(!loc) return '';
+  var m=loc.match(/[-\s]([A-Z]{2})\s*$/);
+  return m ? m[1] : '';
+}
+
+// Normalise a single Canada file's rows
+function normaliseCanadaRows(rows, filename){
+  var role=canadaRoleFromFilename(filename);
+  var isMDC=isMDCFile(filename);
+  return rows.map(function(row){
+    // Build name from firstName + lastName
+    var first=String(row['firstName']||row['FirstName']||'').trim();
+    var last=String(row['lastName']||row['LastName']||'').trim();
+    // Title-case each part
+    function tc(s){return s?s[0].toUpperCase()+s.slice(1).toLowerCase():'';}
+    var name=[tc(first),tc(last)].filter(Boolean).join(' ');
+
+    var mgrf=String(row['MGR_First']||'').trim();
+    var mgrl=String(row['MGR_Last']||'').trim();
+    var manager=cleanName([mgrf,mgrl].filter(Boolean).join(' '));
+
+    var srf=String(row['SrMGR_First']||'').trim();
+    var srl=String(row['SrMGR_Last']||'').trim();
+    var srManager=cleanName([srf,srl].filter(Boolean).join(' '));
+
+    var email=String(row['emailAddr']||row['email']||'').trim();
+    var location=String(row['Location Descr']||row['location']||'').trim();
+    var dept=String(row['deptDesc']||row['dept']||'').trim();
+    var los=row['LOS']||row['losMonths']||'';
+    var province=canadaProvinceFromLocation(location);
+    var segment=canadaSegmentFromDept(dept);
+    var roleVal, titleVal;
+    if(isMDC){
+      roleVal='MDC';
+      titleVal=String(row['deptDesc']||'').replace(/^CAN-MDC\s*/i,'').trim()||'MDC';
+    } else {
+      roleVal=role||String(row['role']||'').trim();
+      titleVal=roleVal;
+    }
+
+    return {
+      name:name,
+      email:email,
+      role:roleVal,
+      title:titleVal,
+      location:location,
+      province:province,
+      dept:dept,
+      segment:segment,
+      losMonths:los?String(los)+' months':'',
+      manager:manager,
+      managerEmail:'',
+      srManager:srManager
+    };
+  }).filter(function(r){
+    if(!r.name&&!r.email) return false;
+    var nm=(r.name||'').toLowerCase();
+    if(/\b(house\s*ac(?:ct|count)|salestrainee|sales\s*trainee|placeholder|vacant|temp\d*\s*temp\d*|temporary\s*sales|qa\s*sales|system\s*engineer\s*grp)\b/i.test(nm)) return false;
+    if(/\([^)]{1,20}\)/.test(r.name)) r.name=r.name.replace(/\s*\([^)]{1,20}\)\s*/g,' ').replace(/\s{2,}/g,' ').trim();
+    return true;
+  });
+}
+
+function updCombineAndProcess(results){
+  try{
+    updSetProgress(45,'Parsing spreadsheets\u2026');
+    var allRows=[];
+    var isCanada=(ORG==='canada');
+
+    results.forEach(function(res){
+      var wb=XLSX.read(res.data,{type:'array'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      console.log('[UPD]',res.name,rows.length,'rows');
+      if(isCanada){
+        allRows=allRows.concat(normaliseCanadaRows(rows, res.name));
+      } else if(ORG==='dcs'){
+        var dcsRows=normaliseDCSRows(rows);
+        if(dcsRows){
+          allRows=allRows.concat(dcsRows);
+        } else {
+          allRows=allRows.concat(rows); // fall through to normaliseRows for old CDW export format
+        }
+      } else {
+        allRows=allRows.concat(rows);
+      }
+    });
+
+    updSetProgress(60,'Normalising fields\u2026');
+    var incoming = isCanada ? allRows : (ORG==='dcs'&&allRows.length&&allRows[0].name!==undefined ? allRows : normaliseRows(allRows));
+    console.log('[UPD] total incoming:',incoming.length);
+
+    if(!incoming.length) throw new Error('No valid records found after processing.');
+
+    updSetProgress(80,'Comparing with current data\u2026');
+    var existing=CACHE[ORG]||[];
+    var incomingRoles=[];
+    if(isCanada){incoming.forEach(function(r){if(r.role&&incomingRoles.indexOf(r.role)===-1)incomingRoles.push(r.role);});}
+    var result=mergeRecords(existing,incoming,ORG,incomingRoles);
+    pendingMerge=result;
+    updSetProgress(100,'Done!');
+
+    document.getElementById('upd-stat-updated').textContent=result.updated;
+    document.getElementById('upd-stat-added').textContent=result.added;
+    document.getElementById('upd-stat-removed').textContent=result.removed;
+    var _skip=document.getElementById('upd-stat-skipped');if(_skip)_skip.textContent=(incoming._skipped||0);
+
+    var keyFn=MERGE_KEY[ORG];
+    var exMap={};existing.forEach(function(x){exMap[keyFn(x)]=true;});
+    var newPeople=incoming.filter(function(r){return!exMap[keyFn(r)];}).slice(0,10);
+    var prev='';
+    if(newPeople.length){
+      prev='<table><thead><tr><th>New people</th><th>Role</th></tr></thead><tbody>'+
+        newPeople.map(function(r){return'<tr><td>'+e(r.name||'')+'</td><td style="color:var(--muted)">'+e(r.role||r.titleGroup||r.title||'')+'</td></tr>';}).join('')+
+        '</tbody></table>';
+    } else {
+      prev='<div style="padding:16px;text-align:center;font-size:12px;color:var(--muted)">No new people \u2014 '+result.updated+' existing records updated</div>';
+    }
+    document.getElementById('upd-preview').innerHTML=prev;
+
+    setTimeout(function(){
+      document.getElementById('upd-progress').style.display='none';
+      document.getElementById('upd-summary').style.display='block';
+      ghUpdatePushBtn();
+    },300);
+
+  } catch(err){
+    var msgEl=document.getElementById('upd-progress-msg');
+    msgEl.textContent='\u26a0\ufe0f '+err.message;
+    msgEl.style.color='#DEA193';
+    msgEl.style.lineHeight='1.5';
+    document.getElementById('upd-prog-bar').style.cssText='height:100%;width:100%;background:#DEA193;box-shadow:none;';
+    document.getElementById('upd-prog-pct').textContent='';
+    showToast(err.message,'#DEA193');
+    var rb=document.getElementById('upd-retry-btn');
+    if(!rb){
+      rb=document.createElement('button');
+      rb.id='upd-retry-btn';
+      rb.textContent='Try another file';
+      rb.style.cssText='margin-top:14px;padding:7px 16px;border-radius:7px;font-size:12px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;font-family:"DM Mono",monospace;display:block;';
+      rb.addEventListener('click',updReset);
+      document.getElementById('upd-progress').appendChild(rb);
+    } else { rb.style.display='block'; }
+  }
+}
+
+// ── GITHUB SETTINGS ───────────────────────────────────────────────
+function ghLoad(){
+  var o=localStorage.getItem('gh_owner')||'';
+  var r=localStorage.getItem('gh_repo')||'';
+  var t=localStorage.getItem('gh_token')||'';
+  document.getElementById('gh-owner').value=o;
+  document.getElementById('gh-repo').value=r;
+  document.getElementById('gh-token').value=t;
+  ghUpdatePushBtn();
+  // Auto-open settings if not configured
+  if(!o||!r||!t){
+    document.getElementById('gh-settings-body').classList.add('open');
+    document.getElementById('gh-chevron').style.transform='rotate(180deg)';
+  }
+}
+
+function ghUpdatePushBtn(){
+  var ready=localStorage.getItem('gh_owner')&&localStorage.getItem('gh_repo')&&localStorage.getItem('gh_token')&&pendingMerge;
+  document.getElementById('upd-push-btn').disabled=!ready;
+}
+
+document.getElementById('gh-settings-toggle').addEventListener('click',function(){
+  var body=document.getElementById('gh-settings-body');
+  var chev=document.getElementById('gh-chevron');
+  body.classList.toggle('open');
+  chev.style.transform=body.classList.contains('open')?'rotate(180deg)':'';
+});
+
+document.getElementById('gh-save-btn').addEventListener('click',function(){
+  var o=document.getElementById('gh-owner').value.trim();
+  var r=document.getElementById('gh-repo').value.trim();
+  // Strip any non-ASCII / invisible characters from the token
+  var t=document.getElementById('gh-token').value.trim().replace(/[^ -~]/g,'');
+  document.getElementById('gh-token').value=t; // show cleaned value
+  if(!o||!r||!t){
+    document.getElementById('gh-status').textContent='\u26a0\ufe0f All three fields required.';
+    document.getElementById('gh-status').style.color='#DEA193';
+    return;
+  }
+  localStorage.setItem('gh_owner',o);
+  localStorage.setItem('gh_repo',r);
+  localStorage.setItem('gh_token',t);
+  document.getElementById('gh-status').textContent='\u2713 Saved';
+  document.getElementById('gh-status').style.color='var(--accent3)';
+  document.getElementById('gh-settings-body').classList.remove('open');
+  document.getElementById('gh-chevron').style.transform='';
+  ghUpdatePushBtn();
+});
+
+// ── PUSH TO GITHUB ────────────────────────────────────────────────
+async function ghPushFile(owner,repo,token,path,content,statusEl){
+  // Ensure token is clean ASCII - localStorage can sometimes store mangled strings
+  token=token.replace(/[^ -~]/g,'');
+  // Get current SHA (required for updates)
+  statusEl.textContent='Checking '+path+'\u2026';
+  var sha=null;
+  try{
+    var r=await fetch('https://api.github.com/repos/'+owner+'/'+repo+'/contents/'+path,{
+      headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}
+    });
+    if(r.ok){var j=await r.json();sha=j.sha;}
+    else if(r.status!==404){throw new Error('GitHub API error '+r.status+' on '+path);}
+  }catch(e){throw e;}
+
+  // Push updated file
+  statusEl.textContent='Pushing '+path+'\u2026';
+  var body={message:'Update '+path+' via CDW Directory updater',content:btoa(unescape(encodeURIComponent(content)))};
+  if(sha)body.sha=sha;
+  var resp=await fetch('https://api.github.com/repos/'+owner+'/'+repo+'/contents/'+path,{
+    method:'PUT',
+    headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+    body:JSON.stringify(body)
+  });
+  if(!resp.ok){
+    var err=await resp.json();
+    throw new Error('Push failed: '+(err.message||resp.status));
+  }
+}
+
+document.getElementById('upd-push-btn').addEventListener('click',async function(){
+  if(!pendingMerge)return;
+  var owner=localStorage.getItem('gh_owner');
+  var repo=localStorage.getItem('gh_repo');
+  var token=localStorage.getItem('gh_token');
+  if(!owner||!repo||!token){
+    document.getElementById('gh-settings-body').classList.add('open');
+    document.getElementById('gh-chevron').style.transform='rotate(180deg)';
+    return;
+  }
+
+  var btn=this;
+  btn.disabled=true;
+  btn.textContent='Pushing\u2026';
+  var statusEl=document.getElementById('upd-push-status');
+  statusEl.style.color='var(--muted)';
+
+  try{
+    // Apply to session first
+    pendingMerge.data.forEach(function(p){var ov=NAME_OVERRIDES[(p.email||'').toLowerCase()];if(ov)p.name=ov;});
+    CACHE[ORG]=pendingMerge.data;
+    DATA=pendingMerge.data;
+    buildSearchIndex();
+    populateFilters();
+    render();
+
+    // Push JSON to GitHub
+    var filename=CFG[ORG].file;
+    var json=JSON.stringify(pendingMerge.data,null,2);
+    await ghPushFile(owner,repo,token,filename,json,statusEl);
+
+    statusEl.textContent='\u2713 Pushed! GitHub Pages will update in ~60 seconds.';
+    statusEl.style.color='var(--accent3)';
+    showToast('Pushed to GitHub \u00b7 live in ~60s','#8FA596');
+    setTimeout(function(){updClose();},2000);
+  }catch(err){
+    statusEl.textContent='\u26a0\ufe0f '+err.message;
+    statusEl.style.color='#DEA193';
+    showToast('Push failed: '+err.message,'#DEA193');
+    btn.disabled=false;
+    btn.textContent='\u2197 Apply + Push to GitHub';
+  }
+});
+
+// Load saved GitHub settings when updater opens
+var _origUpdOpen=updOpen;
+updOpen=function(){
+  _origUpdOpen();
+  ghLoad();
+};
+
+// ── ACCOUNT MAPPING ───────────────────────────────────────────
+// Stores accounts keyed by lowercase email (or name if email not found)
+// Format: { 'email@cdw.com': [{customer, city, state, custNum, t12},...] }
+// Matching logic: Try email first, fall back to FirstName + LastName
+var ACCT_MAP={};
+var ACCT_LOADED=false;
+
+function acctForEmail(email){
+  if(!email)return[];
+  var key=email.toLowerCase();
+  return ACCT_MAP[key]||[];
+}
+
+function fmtT12(v){
+  if(!v&&v!==0)return'';
+  var n=parseFloat(v);
+  if(isNaN(n))return'';
+  if(n>=1000000)return'$'+( n/1000000).toFixed(1)+'M';
+  if(n>=1000)return'$'+(n/1000).toFixed(1)+'K';
+  return'$'+n.toFixed(0);
+}
+
+function acctTableHTML(accts){
+  if(!accts||!accts.length)return'';
+  // Sort by T12 descending
+  var sorted=accts.slice().sort(function(a,b){return(parseFloat(b.t12)||0)-(parseFloat(a.t12)||0);});
+  var rows=sorted.map(function(a){
+    return'<tr><td>'+e(a.customer)+'</td><td>'+e(a.city)+'</td><td>'+e(a.state)+'</td><td>'+e(a.custNum)+'</td><td class="acct-t12">'+fmtT12(a.t12)+'</td></tr>';
+  }).join('');
+  return'<div class="detail-section acct-section"><div class="detail-section-title">Accounts &middot; '+accts.length+'</div>'+
+    '<div class="acct-table-wrap"><table class="acct-table"><thead><tr><th>Customer</th><th>City</th><th>St</th><th>Cust #</th><th style="text-align:right">T12 Spend</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+}
+
+function acctBadgeHTML(email){
+  var accts=acctForEmail(email);
+  if(!accts.length)return'';
+  return'<span class="acct-badge">'+accts.length+' acct'+(accts.length>1?'s':'')+'</span>';
+}
+
+// Upload handler
+document.getElementById('acct-btn').addEventListener('click',function(){
+  document.getElementById('acct-file').click();
+});
+
+document.getElementById('acct-file').addEventListener('change',function(ev){
+  var file=ev.target.files[0];
+  if(!file)return;
+  ev.target.value='';
+  var btn=document.getElementById('acct-btn');
+  btn.classList.add('loading');
+  btn.textContent='Loading…';
+
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      if(typeof XLSX==='undefined'){
+        // Load SheetJS if not already loaded
+        var s=document.createElement('script');
+        s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        s.onload=function(){processAcctFile(e.target.result,btn);};
+        document.head.appendChild(s);
+      }else{
+        processAcctFile(e.target.result,btn);
+      }
+    }catch(err){
+      btn.classList.remove('loading');
+      btn.textContent='Accounts';
+      showToast('Error: '+err.message,'#DEA193');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+function processAcctFile(data,btn){
+  try{
+    var wb=XLSX.read(data,{type:'array'});
+    var ws=wb.Sheets[wb.SheetNames[0]];
+    var rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+
+    console.log('[ACCT] Total rows in file:',rows.length);
+    console.log('[ACCT] Sample row columns:',rows.length?Object.keys(rows[0]):[]);
+
+    // Build lookup maps for DATA by email and by name
+    var byEmail={};
+    var byName={};
+    DATA.forEach(function(person){
+      if(person.email){
+        byEmail[person.email.toLowerCase()]=person;
+      }
+      if(person.name){
+        byName[person.name.toLowerCase()]=person;
+      }
+    });
+
+    console.log('[ACCT] Org has',Object.keys(byEmail).length,'people with email,',Object.keys(byName).length,'people with name');
+
+    ACCT_MAP={};
+    var mapped=0,skipped=0,emailMatches=0,nameMatches=0,noCustomer=0,noMatch=0;
+    var unmappedAccounts=[];
+
+    rows.forEach(function(row,idx){
+      // Extract account data using new column names
+      var acct={
+        customer:String(row['CustomerDescription']||'').trim(),
+        city:String(row['MatchBillToCity']||'').trim(),
+        state:String(row['MatchBillToState']||'').trim(),
+        custNum:String(row['MatchCustomerNumber']||'').trim(),
+        t12:row['MatchT12Spend']||''
+      };
+      if(!acct.customer){noCustomer++;return;}
+
+      // Try to match by email first
+      var email=String(row['MatchAMEmail']||'').trim().toLowerCase();
+      var matchedPerson=null;
+      var matchKey=null;
+
+      if(email&&email.indexOf('@')!==-1&&byEmail[email]){
+        matchedPerson=byEmail[email];
+        matchKey=email;
+        emailMatches++;
+      }else{
+        // Fall back to first name + last name
+        var first=String(row['MatchAMFirstName']||'').trim();
+        var last=String(row['MatchAMLastName']||'').trim();
+        if(first&&last){
+          var fullName=(first+' '+last).toLowerCase();
+          if(byName[fullName]){
+            matchedPerson=byName[fullName];
+            matchKey=matchedPerson.email?matchedPerson.email.toLowerCase():fullName;
+            nameMatches++;
+          }else{
+            // Log first few mismatches to help debug
+            if(noMatch<5){
+              console.log('[ACCT] No match for:',fullName,'(email was:',email||'none',')');
+            }
+            noMatch++;
+          }
+        }else{
+          // Log first few cases with no name data
+          if(noMatch<5&&!email){
+            console.log('[ACCT] Row',idx+2,'has no email and incomplete name:',first,last);
+          }
+          noMatch++;
+        }
+      }
+
+      if(matchKey){
+        if(!ACCT_MAP[matchKey])ACCT_MAP[matchKey]=[];
+        ACCT_MAP[matchKey].push(acct);
+        mapped++;
+      }else{
+        // Store unmapped account with the email/name that failed to match
+        var unmappedAcct={
+          customer:acct.customer,
+          city:acct.city,
+          state:acct.state,
+          custNum:acct.custNum,
+          t12:acct.t12,
+          attemptedEmail:email||'',
+          attemptedName:(row['MatchAMFirstName']||'')+' '+(row['MatchAMLastName']||'')
+        };
+        unmappedAccounts.push(unmappedAcct);
+        skipped++;
+      }
+    });
+
+    // Add all unmapped accounts under a special key
+    if(unmappedAccounts.length>0){
+      ACCT_MAP['__UNMAPPED__']=unmappedAccounts;
+      console.log('[ACCT] Stored',unmappedAccounts.length,'unmapped accounts under __UNMAPPED__ key');
+    }
+
+    console.log('[ACCT] Results: mapped='+mapped+', skipped='+skipped+', noCustomer='+noCustomer+', noMatch='+noMatch);
+    console.log('[ACCT] Email matches: '+emailMatches+', Name matches: '+nameMatches);
+
+    ACCT_LOADED=true;
+    var sellers=Object.keys(ACCT_MAP).length;
+    var totalAccounts=mapped+skipped;
+    btn.classList.remove('loading');
+    btn.textContent='Accounts ('+totalAccounts.toLocaleString()+')';
+    btn.title=totalAccounts.toLocaleString()+' total accounts: '+mapped.toLocaleString()+' mapped to '+sellers+' sellers, '+skipped.toLocaleString()+' unmapped';
+    var asw=document.getElementById('acct-search-container');
+    if(asw&&ORG==='cdw')asw.style.display='block';
+    buildSearchIndex();
+    render();
+
+    // Download CDW_accounts.json
+    var json=JSON.stringify(ACCT_MAP,null,2);
+    var blob=new Blob([json],{type:'application/json'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;a.download='CDW_accounts.json';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast(totalAccounts.toLocaleString()+' accounts \u00b7 '+mapped.toLocaleString()+' mapped to '+sellers+' sellers \u00b7 '+skipped.toLocaleString()+' unmapped','#8FA596');
+  }catch(err){
+    btn.classList.remove('loading');
+    btn.textContent='Accounts';
+    showToast('Parse error: '+err.message,'#DEA193');
+    console.error('[ACCT] Error:',err);
+  }
+}
+
+// Load CDW_accounts.json on startup (silent, non-blocking)
+function loadAccounts(){
+  var x=new XMLHttpRequest();
+  x.open('GET','CDW_accounts.json');
+  x.onload=function(){
+    if(x.status>=200&&x.status<300){
+      try{
+        ACCT_MAP=JSON.parse(x.responseText);
+        ACCT_LOADED=true;
+        var sellers=Object.keys(ACCT_MAP).length;
+        var total=0;Object.keys(ACCT_MAP).forEach(function(k){total+=ACCT_MAP[k].length;});
+        var btn=document.getElementById('acct-btn');
+        if(btn)btn.textContent='Accounts ('+sellers+')';
+        if(btn)btn.title=total+' accounts mapped to '+sellers+' sellers';
+        var asw=document.getElementById('acct-search-container');
+        if(asw&&ORG==='cdw')asw.style.display='block';
+        if(ORG==='cdw'){buildSearchIndex();render();}
+      }catch(err){/* silent */}
+    }
+  };
+  x.onerror=function(){/* CDW_accounts.json doesn't exist yet — that's fine */};
+  x.send();
+}
+loadAccounts();
+</script>
+</body>
+</html>
