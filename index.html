@@ -1981,7 +1981,7 @@ function updOpen(){
 }
 function updClose(){document.getElementById('upd-modal-overlay').classList.remove('open');}
 
-document.getElementById('upd-btn').addEventListener('click',updGateOpen);
+document.getElementById('upd-btn').addEventListener('click',function(){updGateOpen();});
 document.getElementById('upd-modal-close').addEventListener('click',updClose);
 document.getElementById('upd-cancel-btn').addEventListener('click',updReset);
 document.getElementById('upd-modal-overlay').addEventListener('click',function(ev){if(ev.target===this)updClose();});
@@ -1994,7 +1994,6 @@ var _updGateCallback=null;
 
 function updGateOpen(callback){
   _updGateCallback=callback||updOpen;
-  if(sessionStorage.getItem('cdw_upd_auth')==='1'){_updGateCallback();return;}
   var ov=document.getElementById('upd-gate-overlay');
   ov.style.display='flex';
   document.getElementById('upd-gate-input').value='';
@@ -2010,7 +2009,6 @@ document.getElementById('upd-gate-submit').addEventListener('click',function(){
   var entered=document.getElementById('upd-gate-input').value;
   var sts=document.getElementById('upd-gate-status');
   if(entered===UPD_PASSWORD){
-    sessionStorage.setItem('cdw_upd_auth','1');
     updGateClose();
     if(_updGateCallback)_updGateCallback();
   }else{
