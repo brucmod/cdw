@@ -2134,21 +2134,25 @@ function initPAECanadaPanel(PAE_DATA){
   }
 
   sel.addEventListener('change',function(){renderAE(sel.value);});
+}
 
-  // Show button only on Canada org
-  function updateBtn(){
+// Canada PAE button visibility — runs unconditionally, regardless of data load
+(function(){
+  var btn=document.getElementById('pae-ca-btn');
+  var overlay=document.getElementById('pae-ca-overlay');
+  function updateCaBtn(){
     if(typeof ORG!=='undefined'&&ORG==='canada'){
       btn.style.display='flex';
     }else{
       btn.style.display='none';
-      closePAE();
+      overlay.classList.remove('open');
     }
   }
   document.querySelectorAll('.org-btn').forEach(function(b){
-    b.addEventListener('click',function(){setTimeout(updateBtn,0);});
+    b.addEventListener('click',function(){setTimeout(updateCaBtn,0);});
   });
-  setTimeout(updateBtn,100);
-}
+  setTimeout(updateCaBtn,100);
+})();
 
 fetch('pure_ae_mapping.json')
   .then(function(r){ return r.json(); })
