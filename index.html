@@ -318,6 +318,10 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M3 20c0-3.9 2.7-7 6-7s6 3.1 6 7"/><circle cx="18" cy="9" r="3"/><path d="M21 20c0-2.8-1.3-5.2-3.3-6.5" stroke-dasharray="2 1.5"/></svg>
       Pure AE View
     </button>
+    <button class="pae-btn" id="pae-ca-btn" title="Browse by Pure Storage Account Executive (Canada)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M3 20c0-3.9 2.7-7 6-7s6 3.1 6 7"/><circle cx="18" cy="9" r="3"/><path d="M21 20c0-2.8-1.3-5.2-3.3-6.5" stroke-dasharray="2 1.5"/></svg>
+      Pure AE View
+    </button>
     <button class="theme-btn" id="theme-toggle" title="Toggle light/dark theme">
       <svg id="theme-icon-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       <svg id="theme-icon-light" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -332,7 +336,7 @@
   </div>
 </div>
 
-<!-- ── PURE AE PANEL ── -->
+<!-- ── PURE AE PANEL (CDW) ── -->
 <div class="pae-overlay" id="pae-overlay">
   <div class="pae-panel">
     <div class="pae-header">
@@ -346,6 +350,28 @@
       <button class="pae-close" id="pae-close">&#x2715;</button>
     </div>
     <div class="pae-body" id="pae-body">
+      <div class="pae-empty">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="8" r="4"/><path d="M3 20c0-3.9 2.7-7 6-7s6 3.1 6 7"/><circle cx="18" cy="9" r="3"/><path d="M21 20c0-2.8-1.3-5.2-3.3-6.5"/></svg>
+        <div>Select a Pure AE to view their accounts</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PURE AE PANEL (Canada) ── -->
+<div class="pae-overlay" id="pae-ca-overlay">
+  <div class="pae-panel">
+    <div class="pae-header">
+      <div class="pae-header-title">Pure <em>AE View</em> <span style="font-size:13px;color:var(--muted);">🇨🇦 Canada</span></div>
+      <div class="pae-select-wrap">
+        <select class="pae-select" id="pae-ca-select">
+          <option value="">— Select a Pure AE —</option>
+        </select>
+      </div>
+      <div class="pae-meta" id="pae-ca-meta"></div>
+      <button class="pae-close" id="pae-ca-close">&#x2715;</button>
+    </div>
+    <div class="pae-body" id="pae-ca-body">
       <div class="pae-empty">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="8" r="4"/><path d="M3 20c0-3.9 2.7-7 6-7s6 3.1 6 7"/><circle cx="18" cy="9" r="3"/><path d="M21 20c0-2.8-1.3-5.2-3.3-6.5"/></svg>
         <div>Select a Pure AE to view their accounts</div>
@@ -2020,10 +2046,8 @@ function initPAEPanel(PAE_DATA) {
     }
   }
   // Hook into org switching
-  var _origSwitchOrg=window.switchOrg;
   if(typeof switchOrg==='function'){
     var __paeOrgPatch=setInterval(function(){
-      // Poll until switchOrg is available and patchable
       updatePAEBtn();
       clearInterval(__paeOrgPatch);
     },50);
@@ -2036,10 +2060,105 @@ function initPAEPanel(PAE_DATA) {
   setTimeout(updatePAEBtn,100);
 }
 
+function initPAECanadaPanel(PAE_DATA){
+  var overlay=document.getElementById('pae-ca-overlay');
+  var panel=document.getElementById('pae-ca-body');
+  var sel=document.getElementById('pae-ca-select');
+  var meta=document.getElementById('pae-ca-meta');
+  var btn=document.getElementById('pae-ca-btn');
+
+  // Populate dropdown
+  var aes=Object.keys(PAE_DATA.a).sort(function(a,b){return a.localeCompare(b);});
+  aes.forEach(function(name){
+    var ct=PAE_DATA.a[name].length;
+    var opt=document.createElement('option');
+    opt.value=name;
+    opt.textContent=name+' ('+ct+')';
+    sel.appendChild(opt);
+  });
+
+  function openPAE(){overlay.classList.add('open');btn.classList.add('active');document.body.style.overflow='hidden';}
+  function closePAE(){overlay.classList.remove('open');btn.classList.remove('active');document.body.style.overflow='';}
+
+  btn.addEventListener('click',openPAE);
+  document.getElementById('pae-ca-close').addEventListener('click',closePAE);
+  overlay.addEventListener('click',function(ev){if(ev.target===overlay)closePAE();});
+  document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&overlay.classList.contains('open'))closePAE();});
+
+  function fmtT12v(v){if(!v)return'';var n=parseFloat(v);if(isNaN(n))return'';if(n>=1000000)return'$'+(n/1000000).toFixed(1)+'M';if(n>=1000)return'$'+(n/1000).toFixed(1)+'K';return'$'+n.toFixed(0);}
+
+  function renderAE(aeName){
+    if(!aeName){
+      panel.innerHTML='<div class="pae-empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="8" r="4"/><path d="M3 20c0-3.9 2.7-7 6-7s6 3.1 6 7"/><circle cx="18" cy="9" r="3"/><path d="M21 20c0-2.8-1.3-5.2-3.3-6.5"/></svg><div>Select a Pure AE to view their accounts</div></div>';
+      meta.textContent='';return;
+    }
+    var custNums=PAE_DATA.a[aeName]||[];
+    var withAM=0,without=0;
+    custNums.forEach(function(n){var a=PAE_DATA.l[n];if(a&&a.ae)withAM++;else without++;});
+    meta.textContent=custNums.length+' accounts · '+withAM+' with CDW AM';
+
+    var sorted=custNums.slice().sort(function(a,b){
+      var aa=PAE_DATA.l[a],bb=PAE_DATA.l[b];
+      var ha=aa&&aa.ae?1:0,hb=bb&&bb.ae?1:0;
+      if(ha!==hb)return hb-ha;
+      var na=aa?aa.c:'',nb=bb?bb.c:'';
+      return na.localeCompare(nb);
+    });
+
+    var html='<div class="pae-grid">';
+    sorted.forEach(function(num){
+      var a=PAE_DATA.l[num];if(!a)return;
+      var hasAM=!!(a.ae);
+      var amName=a.af&&a.al?(a.af+' '+a.al).replace(/^\./,'').trim():(a.al||a.af||'');
+      var cdwPerson=hasAM?(DATA||[]).find(function(p){return p.email&&p.email.toLowerCase()===a.ae;}):null;
+      var displayAM=cdwPerson?cdwPerson.name:(amName||'');
+      var cardClass='pae-acct-card'+(hasAM?'':' no-am');
+      var dataAttr=cdwPerson?(' data-am="'+encodeURIComponent(cdwPerson.name)+'"'):'';
+      html+='<div class="'+cardClass+'"'+dataAttr+'>';
+      html+='<div class="pae-acct-name">'+e(a.c)+'</div>';
+      html+='<div class="pae-acct-meta"><span>'+e(num)+'</span></div>';
+      html+='<div class="pae-acct-footer">';
+      html+='<div class="pae-acct-am">'+(displayAM?'AM: <strong>'+e(displayAM)+'</strong>':'<span style="opacity:.5">No CDW AM mapped</span>')+'</div>';
+      if(hasAM)html+='<div class="pae-acct-cta">View &#x2192;</div>';
+      html+='</div></div>';
+    });
+    html+='</div>';
+    panel.innerHTML=html;
+
+    panel.querySelectorAll('.pae-acct-card:not(.no-am)').forEach(function(card){
+      card.addEventListener('click',function(){
+        var amName=card.dataset.am;
+        if(amName){closePAE();setTimeout(function(){openModal(decodeURIComponent(amName));},120);}
+      });
+    });
+  }
+
+  sel.addEventListener('change',function(){renderAE(sel.value);});
+
+  // Show button only on Canada org
+  function updateBtn(){
+    if(typeof ORG!=='undefined'&&ORG==='canada'){
+      btn.style.display='flex';
+    }else{
+      btn.style.display='none';
+      closePAE();
+    }
+  }
+  document.querySelectorAll('.org-btn').forEach(function(b){
+    b.addEventListener('click',function(){setTimeout(updateBtn,0);});
+  });
+  setTimeout(updateBtn,100);
+}
+
 fetch('pure_ae_mapping.json')
   .then(function(r){ return r.json(); })
   .then(function(raw){ initPAEPanel(buildPAEData(raw)); })
   .catch(function(err){ console.error('Pure AE data load failed:', err); });
+
+fetch('pure_ae_canada.json')
+  .then(function(r){ return r.json(); })
+  .then(function(raw){ initPAECanadaPanel(buildPAEData(raw)); })
+  .catch(function(err){ console.error('Pure AE Canada data load failed:', err); });
 
 loadAccounts();
 </script>
