@@ -1101,7 +1101,7 @@ function rCards(data){
   // ── DCS: 4-level hierarchy renderer (Director > Sr Manager > Manager > IC) ──
   if(ORG==='dcs'){
     var byName={};
-    data.forEach(function(d){byName[d.name]=d;});
+    data.forEach(function(d){byName[(d.name||'').toLowerCase()]=d;});
     var rendered={};
     var html='';
 
@@ -1384,35 +1384,36 @@ function buildLegend(){
 var _treeCollapsed={};
 function rTree(data){
   var byName={};
-  data.forEach(function(d){byName[d.name]=d;});
+  data.forEach(function(d){byName[(d.name||'').toLowerCase()]=d;});
 
   var childrenOf={};
   data.forEach(function(d){
-    var mgr=d.manager||'';
-    if(mgr && mgr!==d.name){
+    var mgr=(d.manager||'').toLowerCase();
+    var nm=(d.name||'').toLowerCase();
+    if(mgr && mgr!==nm){
       if(!childrenOf[mgr])childrenOf[mgr]=[];
       childrenOf[mgr].push(d);
     }
   });
 
   var roots=data.filter(function(d){
-    var mgr=d.manager||'';
+    var mgr=(d.manager||'').toLowerCase();
     return !mgr || !byName[mgr];
   });
 
   function countDesc(name){
-    var kids=childrenOf[name]||[];
+    var kids=childrenOf[(name||'').toLowerCase()]||[];
     var n=kids.length;
-    kids.forEach(function(k){n+=countDesc(k.name);});
+    kids.forEach(function(k){n+=countDesc((k.name||'').toLowerCase());});
     return n;
   }
 
   function sortKids(arr){
     return arr.slice().sort(function(a,b){
-      var ha=(childrenOf[a.name]||[]).length?1:0;
-      var hb=(childrenOf[b.name]||[]).length?1:0;
+      var ha=(childrenOf[(a.name||'').toLowerCase()]||[]).length?1:0;
+      var hb=(childrenOf[(b.name||'').toLowerCase()]||[]).length?1:0;
       if(hb!==ha)return hb-ha;
-      return countDesc(b.name)-countDesc(a.name);
+      return countDesc((b.name||'').toLowerCase())-countDesc((a.name||'').toLowerCase());
     });
   }
 
@@ -1420,7 +1421,7 @@ function rTree(data){
 
   // ── Vertical list node (depth 2+) ──
   function renderListNode(d,depth){
-    var kids=sortKids(childrenOf[d.name]||[]);
+    var kids=sortKids(childrenOf[(d.name||'').toLowerCase()]||[]);
     var hasKids=kids.length>0;
     // Default: collapsed. _treeCollapsed[name]===true means open.
     var isOpen=_treeCollapsed[d.name]===true;
@@ -1461,7 +1462,7 @@ function rTree(data){
 
   // Render each root as a card section
   roots.forEach(function(root){
-    var kids=sortKids(childrenOf[root.name]||[]);
+    var kids=sortKids(childrenOf[(root.name||'').toLowerCase()]||[]);
     var desc=countDesc(root.name);
     var seg=root.segment||root.channel||'';
 
@@ -1482,7 +1483,7 @@ function rTree(data){
     if(kids.length){
       html+='<div class="tree-l1-grid">';
       kids.forEach(function(kid){
-        var subKids=sortKids(childrenOf[kid.name]||[]);
+        var subKids=sortKids(childrenOf[(kid.name||'').toLowerCase()]||[]);
         var subDesc=countDesc(kid.name);
         var kSeg=kid.segment||kid.channel||'';
         var isOpen=_treeCollapsed[kid.name]===true;
