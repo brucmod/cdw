@@ -666,7 +666,7 @@ var CFG = {
       return s1+s2+ch+acctHtml;}},
   dcs:{file:'dcs_data.json',eyebrow:'CDW \u00b7 Hybrid Infrastructure',title:'DCS Org <em>Directory</em>',hint:'Search name, title, email, location\u2026',hasMap:false,defaultView:'cards',
     filters:[{id:'f-dir',key:'director',lbl:'All Directors',vfn:function(d){var v=d.director;return(v&&v.trim()&&v.charAt(0)!=='_')?v:null;}},{id:'f-sr',key:'srManager',lbl:'All Sr Managers',vfn:function(d){var v=d.srManager;return(v&&v.trim()&&v!=='-')?v:null;}},{id:'f-mgr',key:'manager',lbl:'All Managers',vfn:function(d){var m=d.manager;return(!m||m==='-'||m.charAt(0)==='_')?null:m;}},{id:'f-seg',key:'segment',lbl:'All Segments'},{id:'f-sol',key:'solutionArea',lbl:'All Solution Areas'},{id:'f-hst',key:'homeLocation',lbl:'All Home States',vfn:function(d){var h=d.homeLocation||'';if(!h)return null;var m=h.match(/,\s*([A-Z]{2})\s*$/);if(m)return m[1];if(h.length===2&&h===h.toUpperCase())return h;return null;}},{id:'f-off',key:'officeLocation',lbl:'All Offices',vfn:function(d){return d.officeLocation||null;}}],
-    cols:[{k:'name',l:'Name'},{k:'title',l:'Title'},{k:'director',l:'Director'},{k:'srManager',l:'Sr Manager'},{k:'manager',l:'Manager'},{k:'segment',l:'Segment'},{k:'homeLocation',l:'Home'}],
+    cols:[{k:'name',l:'Name'},{k:'title',l:'Title'},{k:'director',l:'Director'},{k:'srManager',l:'Sr Manager'},{k:'manager',l:'Manager'},{k:'segment',l:'Segment'},{k:'solutionArea',l:'Solution Area'},{k:'statesCovers',l:'States Covered'},{k:'homeLocation',l:'Home'}],
     grpKey:'manager',
     sub:function(d){return d.title||'';},
     tags:function(d){var t=[];if(d.director&&d.director.charAt(0)!=='_')t.push({c:'tag tier',v:'Dir: '+d.director});if(d.srManager&&d.srManager!=='-')t.push({c:'tag',v:'Sr Mgr: '+d.srManager});if(d.segment)t.push({c:'tag seg',v:d.segment});if(d.solutionArea)t.push({c:'tag sol',v:d.solutionArea});if(d.homeLocation)t.push({c:'tag',v:'Home \u2013 '+d.homeLocation});if(d.statesCovers)t.push({c:'tag',v:'Coverage \u2013 '+d.statesCovers});return t;},
@@ -2240,6 +2240,8 @@ function exportAMsToXLS(){
     if(c.label==='Email')return'<col style="width:220px"/>';
     if(c.label==='First Name'||c.label==='Last Name')return'<col style="width:130px"/>';
     if(c.label==='Manager'||c.label==='Director'||c.label==='Sr Manager')return'<col style="width:160px"/>';
+    if(c.label==='States Covered')return'<col style="width:200px"/>';
+    if(c.label==='Solution Area')return'<col style="width:160px"/>';
     return'<col style="width:120px"/>';
   }).join('');
 
