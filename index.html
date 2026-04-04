@@ -2172,16 +2172,42 @@ function exportAMsToXLS(){
   function esc(s){
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+  function clean(s){return String(s||'').replace(/^[._]+/,'').trim();}
 
-  function splitName(fullName){
-    if(!fullName)return{first:'',last:''};
-    var parts=(fullName||'').trim().split(/\s+/);
-    if(parts.length===1)return{first:parts[0],last:''};
-    return{first:parts.slice(0,parts.length-1).join(' '),last:parts[parts.length-1]};
-  }
-
-  // ── Collect active filters ──────────────────────────────────────────────
+  // ── Build column definitions dynamically from CFG[ORG].cols ─────────────
+  // Expand the 'name' column into First Name + Last Name, keep all others
   var cfg=CFG[ORG];
+  var exportCols=[];
+  cfg.cols.forEach(function(c){
+    if(c.k==='name'){
+      exportCols.push({label:'First Name', fn:function(d){
+        var parts=(d.name||'').trim().split(/\s+/);
+        return parts.length>1?parts.slice(0,parts.length-1).join(' '):parts[0]||'';
+      }});
+      exportCols.push({label:'Last Name', fn:function(d){
+        var parts=(d.name||'').trim().split(/\s+/);
+        return parts.length>1?parts[parts.length-1]:'';
+      }});
+      // Always include email right after name
+      exportCols.push({label:'Email', fn:function(d){return d.email||'';}, mono:true});
+    } else {
+      (function(col){
+        exportCols.push({
+          label: col.l,
+          fn: function(d){
+            var raw=d[col.k]||'';
+            if(!raw)return'';
+            // Use the col's display function if it exists, but strip any HTML tags
+            if(col.dfn){return String(col.dfn(raw)).replace(/<[^>]+>/g,'');}
+            return clean(raw);
+          }
+        });
+      })(c);
+    }
+  });
+  var numCols=exportCols.length;
+
+  // ── Collect active filters ───────────────────────────────────────────────
   var activeFilters=[];
   cfg.filters.forEach(function(f){
     var el=document.getElementById(f.id);
@@ -2195,120 +2221,114 @@ function exportAMsToXLS(){
   var aq=document.getElementById('acct-search')?document.getElementById('acct-search').value.trim():'';
   if(aq)activeFilters.push({label:'Account Search',value:aq});
 
-  // ── Metadata ────────────────────────────────────────────────────────────
+  // ── Metadata ─────────────────────────────────────────────────────────────
   var orgLabel={cdw:'CDW Sales Organization',dcs:'CDW · Hybrid Infrastructure',canada:'CDW Canada'}[ORG]||(ORG.toUpperCase());
   var now=new Date();
   var dateStr=now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
   var ts=now.toISOString().slice(0,10);
 
-  // ── Colours ─────────────────────────────────────────────────────────────
-  var ORANGE='#C4571A', ORANGE_LIGHT='#FAE8DC';
+  // ── Colours ──────────────────────────────────────────────────────────────
+  var ORANGE='#C4571A';
   var HEADER_BG='#2D2A27', HEADER_FG='#FFFFFF';
   var ROW_ALT='#F7F3EE', ROW_NORM='#FFFFFF';
   var BORDER='#D0C8BA', MUTED='#71584C';
   var FILTER_BG='#FFF5EE', FILTER_BORDER='#F0C9AE';
+  var MONO='font-family:"Courier New",Courier,monospace;font-size:9pt;color:'+ORANGE+';';
 
-  // ── Shared cell style helpers ────────────────────────────────────────────
-  var COL_W='<col style="width:140px"/><col style="width:140px"/><col style="width:240px"/><col style="width:200px"/>';
+  // ── Col widths ────────────────────────────────────────────────────────────
+  var colWidths=exportCols.map(function(c){
+    if(c.label==='Email')return'<col style="width:220px"/>';
+    if(c.label==='First Name'||c.label==='Last Name')return'<col style="width:130px"/>';
+    if(c.label==='Manager'||c.label==='Director'||c.label==='Sr Manager')return'<col style="width:160px"/>';
+    return'<col style="width:120px"/>';
+  }).join('');
 
-  // ── Title block ─────────────────────────────────────────────────────────
+  // ── Title block ──────────────────────────────────────────────────────────
   var titleBlock=
-    '<tr><td colspan="4" style="background:'+HEADER_BG+';color:#FFFFFF;font-family:Calibri,Arial,sans-serif;'+
+    '<tr><td colspan="'+numCols+'" style="background:'+HEADER_BG+';color:#FFFFFF;font-family:Calibri,Arial,sans-serif;'+
     'font-size:16pt;font-weight:bold;padding:14px 16px;border-bottom:3px solid '+ORANGE+';">'+
-    esc(orgLabel)+' &mdash; Account Manager Directory</td></tr>'+
-    '<tr><td colspan="4" style="background:'+HEADER_BG+';color:#C5C0B8;font-family:Calibri,Arial,sans-serif;'+
+    esc(orgLabel)+' &mdash; Directory Export</td></tr>'+
+    '<tr><td colspan="'+numCols+'" style="background:'+HEADER_BG+';color:#C5C0B8;font-family:Calibri,Arial,sans-serif;'+
     'font-size:9pt;padding:4px 16px 10px;">'+
     'Exported: '+esc(dateStr)+'&nbsp;&nbsp;·&nbsp;&nbsp;'+fil.length+' record'+(fil.length===1?'':'s')+
     '</td></tr>'+
-    '<tr><td colspan="4" style="height:8px;background:'+ORANGE+';"></td></tr>';
+    '<tr><td colspan="'+numCols+'" style="height:8px;background:'+ORANGE+';"></td></tr>';
 
-  // ── Active filters block ─────────────────────────────────────────────────
+  // ── Active filters block ──────────────────────────────────────────────────
   var filterBlock='';
   if(activeFilters.length){
-    filterBlock+='<tr><td colspan="4" style="background:'+FILTER_BG+';'+
+    filterBlock+='<tr><td colspan="'+numCols+'" style="background:'+FILTER_BG+';'+
       'color:'+MUTED+';font-family:Calibri,Arial,sans-serif;font-size:8pt;font-weight:bold;'+
       'letter-spacing:0.08em;text-transform:uppercase;padding:8px 16px 4px;'+
-      'border-top:1px solid '+FILTER_BORDER+';border-bottom:none;">Active Filters</td></tr>';
+      'border-top:1px solid '+FILTER_BORDER+';">Active Filters</td></tr>';
     activeFilters.forEach(function(f,i){
       var isLast=(i===activeFilters.length-1);
+      var bb=isLast?'border-bottom:1px solid '+FILTER_BORDER+';':'';
       filterBlock+='<tr>'+
         '<td style="background:'+FILTER_BG+';color:'+MUTED+';font-family:Calibri,Arial,sans-serif;'+
-        'font-size:9pt;padding:3px 16px 3px 24px;'+(isLast?'border-bottom:1px solid '+FILTER_BORDER+';':'')+
-        '">'+esc(f.label)+'</td>'+
-        '<td colspan="3" style="background:'+FILTER_BG+';color:#2D2A27;font-family:Calibri,Arial,sans-serif;'+
-        'font-size:9pt;font-weight:600;padding:3px 16px 3px 0;'+(isLast?'border-bottom:1px solid '+FILTER_BORDER+';':'')+
-        '">'+esc(f.value)+'</td></tr>';
+        'font-size:9pt;padding:3px 16px 3px 24px;'+bb+'">'+esc(f.label)+'</td>'+
+        '<td colspan="'+(numCols-1)+'" style="background:'+FILTER_BG+';color:#2D2A27;font-family:Calibri,Arial,sans-serif;'+
+        'font-size:9pt;font-weight:600;padding:3px 16px 3px 0;'+bb+'">'+esc(f.value)+'</td></tr>';
     });
-    filterBlock+='<tr><td colspan="4" style="height:6px;"></td></tr>';
   } else {
-    filterBlock+='<tr><td colspan="4" style="background:'+FILTER_BG+';'+
+    filterBlock+='<tr><td colspan="'+numCols+'" style="background:'+FILTER_BG+';'+
       'color:'+MUTED+';font-family:Calibri,Arial,sans-serif;font-size:8pt;font-style:italic;'+
       'padding:6px 16px;border-top:1px solid '+FILTER_BORDER+';border-bottom:1px solid '+FILTER_BORDER+';'+
-      '">No filters applied — showing all records</td></tr>'+
-      '<tr><td colspan="4" style="height:6px;"></td></tr>';
+      '">No filters applied — showing all records</td></tr>';
   }
+  filterBlock+='<tr><td colspan="'+numCols+'" style="height:6px;"></td></tr>';
 
-  // ── Column headers ───────────────────────────────────────────────────────
+  // ── Column headers ────────────────────────────────────────────────────────
   var HCELL='font-family:Calibri,Arial,sans-serif;font-size:10pt;font-weight:bold;'+
     'color:'+HEADER_FG+';background:'+ORANGE+';padding:9px 14px;'+
     'border:1px solid #A8420E;text-transform:uppercase;letter-spacing:0.06em;';
-  var headerRow='<tr>'+
-    '<td style="'+HCELL+'">First Name</td>'+
-    '<td style="'+HCELL+'">Last Name</td>'+
-    '<td style="'+HCELL+'">Email</td>'+
-    '<td style="'+HCELL+'">Manager</td>'+
-    '</tr>';
+  var headerRow='<tr>'+exportCols.map(function(c){
+    return'<td style="'+HCELL+'">'+esc(c.label)+'</td>';
+  }).join('')+'</tr>';
 
-  // ── Data rows ────────────────────────────────────────────────────────────
+  // ── Data rows ─────────────────────────────────────────────────────────────
   var DCELL_BASE='font-family:Calibri,Arial,sans-serif;font-size:10pt;padding:8px 14px;'+
     'border-bottom:1px solid '+BORDER+';border-right:1px solid '+BORDER+';vertical-align:middle;';
-  var MONO='font-family:"Courier New",Courier,monospace;font-size:9pt;color:'+ORANGE+';';
 
   var dataRows=fil.map(function(d,i){
-    var n=splitName(d.name);
-    var mgr=(d.manager||'').replace(/^[._]+/,'').trim();
     var bg=i%2===0?ROW_NORM:ROW_ALT;
     var base=DCELL_BASE+'background:'+bg+';color:#2D2A27;';
-    return'<tr>'+
-      '<td style="'+base+'font-weight:500;">'+esc(n.first)+'</td>'+
-      '<td style="'+base+'font-weight:500;">'+esc(n.last)+'</td>'+
-      '<td style="'+base+MONO+'">'+esc(d.email||'')+'</td>'+
-      '<td style="'+base+'color:'+MUTED+';">'+esc(mgr)+'</td>'+
-      '</tr>';
+    return'<tr>'+exportCols.map(function(c){
+      var val=c.fn(d);
+      var style=base;
+      if(c.mono)style+=MONO;
+      else if(c.label==='First Name'||c.label==='Last Name')style+='font-weight:500;';
+      else if(c.label==='Manager'||c.label==='Director'||c.label==='Sr Manager')style+='color:'+MUTED+';';
+      return'<td style="'+style+'">'+esc(val)+'</td>';
+    }).join('')+'</tr>';
   }).join('');
 
-  // ── Footer ───────────────────────────────────────────────────────────────
-  var footerRow='<tr><td colspan="4" style="background:#F7F3EE;color:'+MUTED+';'+
+  // ── Footer ────────────────────────────────────────────────────────────────
+  var footerRow='<tr><td colspan="'+numCols+'" style="background:#F7F3EE;color:'+MUTED+';'+
     'font-family:Calibri,Arial,sans-serif;font-size:8pt;padding:8px 14px;'+
     'border-top:2px solid '+ORANGE+';font-style:italic;">'+
     'CDW Org Directory · v'+APP_VERSION+' · '+esc(dateStr)+
     '</td></tr>';
 
-  // ── Assemble XLS ─────────────────────────────────────────────────────────
+  // ── Assemble XLS ──────────────────────────────────────────────────────────
   var xlsContent='<html xmlns:o="urn:schemas-microsoft-com:office:office" '+
     'xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">'+
     '<head><meta charset="UTF-8">'+
     '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>'+
-    '<x:Name>Account Managers</x:Name>'+
-    '<x:WorksheetOptions><x:DisplayGridlines/><x:FreezePanes/><x:FrozenNoSplit/>'+
-    '<x:SplitHorizontal>1</x:SplitHorizontal><x:TopRowBottomPane>1</x:TopRowBottomPane>'+
-    '</x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->'+
+    '<x:Name>Directory Export</x:Name>'+
+    '<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>'+
+    '</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->'+
     '<style>td{mso-number-format:"@";}</style>'+
     '</head><body>'+
     '<table border="0" cellspacing="0" cellpadding="0">'+
-    COL_W+
-    titleBlock+
-    filterBlock+
-    headerRow+
-    dataRows+
-    footerRow+
+    colWidths+titleBlock+filterBlock+headerRow+dataRows+footerRow+
     '</table></body></html>';
 
   var blob=new Blob([xlsContent],{type:'application/vnd.ms-excel;charset=utf-8'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');
   a.href=url;
-  a.download=(ORG||'org').toUpperCase()+'_AccountManagers_'+ts+'.xls';
+  a.download=(ORG||'org').toUpperCase()+'_DirectoryExport_'+ts+'.xls';
   document.body.appendChild(a);
   a.click();
   setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},200);
