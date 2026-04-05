@@ -699,7 +699,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
 <script>
-var APP_VERSION='10.1';
+var APP_VERSION='10.2';
 /* Name overrides — keyed by lowercase email. Applied after XLSX import & JSON load. */
 var NAME_OVERRIDES = {
   'scothie@cdw.com': 'Scott Hiemstra'
@@ -1122,6 +1122,7 @@ function buildAcctCard(acct,mgrName){
   if(acct.city&&acct.state)meta=e(acct.city)+', '+e(acct.state);
   else if(acct.state)meta=e(acct.state);
   if(acct.custNum)meta+=(meta?' &middot; ':'')+e(acct.custNum);
+  if(acct.duns)meta+=(meta?' &middot; ':'')+'DUNS: '+e(acct.duns);
   var t12='';
   if(acct.t12){t12='<div style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--accent3);font-weight:500">'+fmtT12(acct.t12)+'</div>';}
   return'<div class="acct-card" data-name="'+encodeURIComponent(mgrName)+'">'+
@@ -2040,10 +2041,10 @@ function acctTableHTML(accts){
   // Sort by T12 descending
   var sorted=accts.slice().sort(function(a,b){return(parseFloat(b.t12)||0)-(parseFloat(a.t12)||0);});
   var rows=sorted.map(function(a){
-    return'<tr><td>'+e(a.customer)+'</td><td>'+e(a.city)+'</td><td>'+e(a.state)+'</td><td>'+e(a.custNum)+'</td><td class="acct-t12">'+fmtT12(a.t12)+'</td></tr>';
+    return'<tr><td>'+e(a.customer)+'</td><td>'+e(a.city)+'</td><td>'+e(a.state)+'</td><td>'+e(a.custNum)+'</td><td>'+e(a.duns||'')+'</td><td class="acct-t12">'+fmtT12(a.t12)+'</td></tr>';
   }).join('');
   return'<div class="detail-section acct-section"><div class="detail-section-title">Accounts &middot; '+accts.length+'</div>'+
-    '<div class="acct-table-wrap"><table class="acct-table"><thead><tr><th>Customer</th><th>City</th><th>St</th><th>Cust #</th><th style="text-align:right">T12 Spend</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+    '<div class="acct-table-wrap"><table class="acct-table"><thead><tr><th>Customer</th><th>City</th><th>St</th><th>Cust #</th><th>DUNS</th><th style="text-align:right">T12 Spend</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 
 function acctBadgeHTML(email){
