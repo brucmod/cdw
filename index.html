@@ -2934,31 +2934,30 @@ loadAccounts();
     xhr.upload.addEventListener('load',function(){
       setStepDone(key,steps[0]);
       var stepIdx=1;
-      var target=88; // crawl toward 88%, never reach it until server responds
+      var target=90;
       setStepActive(key,steps[stepIdx]);
-      setProgress(15,'Processing\u2026');
-      $('prog-fill-'+key).classList.add('processing');
+      setProgress(16,'Processing\u2026');
+
+      var stepThresholds=[];
+      for(var s=1;s<steps.length;s++) stepThresholds.push(16+((s)/(steps.length-1))*(target-16));
+      var labels=['Parsing\u2026','Analyzing\u2026','Building\u2026','Matching\u2026','Merging\u2026','Saving\u2026'];
 
       fakeTimer=setInterval(function(){
         if(currentPct>=target) return;
-        // Slow down as we approach target — gives feeling of real work
         var remaining=target-currentPct;
-        var jump=Math.max(0.3, remaining*0.04);
+        var jump=Math.max(0.5, remaining*0.06);
         currentPct=Math.min(target, currentPct+jump);
         var rounded=Math.round(currentPct);
         $('prog-fill-'+key).style.width=rounded+'%';
         $('prog-pct-'+key).textContent=rounded+'%';
 
-        // Advance step indicators at percentage thresholds
-        var stepPct=15+((stepIdx)/(steps.length-1))*(target-15);
-        if(currentPct>=stepPct && stepIdx<steps.length-1){
+        if(stepIdx<steps.length-1 && currentPct>=stepThresholds[stepIdx-1]){
           setStepDone(key,steps[stepIdx]);
           stepIdx++;
-          setStepActive(key,steps[stepIdx]);
-          var labels=['Parsing\u2026','Analyzing\u2026','Building\u2026','Matching\u2026','Merging\u2026','Saving\u2026'];
-          $('prog-status-'+key).textContent=labels[Math.min(stepIdx,labels.length-1)];
+          if(stepIdx<steps.length) setStepActive(key,steps[stepIdx]);
+          $('prog-status-'+key).textContent=labels[Math.min(stepIdx-1,labels.length-1)];
         }
-      },120);
+      },150);
     });
 
     // Phase 3: Server responds — snap to 100%
