@@ -1657,7 +1657,18 @@ function openModal(name){
   document.getElementById('modal-overlay').classList.add('open');
   document.getElementById('mcb').onclick=closeModal;
 }
-function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  // Return to PAE panel if we came from one
+  if(window._paeReturnTo){
+    var which=window._paeReturnTo;
+    window._paeReturnTo=null;
+    setTimeout(function(){
+      var ov=document.getElementById(which==='canada'?'pae-ca-overlay':'pae-overlay');
+      if(ov){ov.classList.add('open');document.body.style.overflow='hidden';}
+    },80);
+  }
+}
 document.getElementById('modal-overlay').addEventListener('click',function(ev){if(ev.target===document.getElementById('modal-overlay'))closeModal();});
 document.addEventListener('keydown',function(ev){if(ev.key==='Escape')closeModal();});
 
@@ -2183,8 +2194,9 @@ function initPAEPanel(PAE_DATA) {
       card.addEventListener('click',function(){
         var amName=card.dataset.am;
         if(amName){
-          closePAE();
-          // Small delay so panel animates out before modal opens
+          overlay.classList.remove('open');
+          document.body.style.overflow='';
+          window._paeReturnTo='cdw';
           setTimeout(function(){openModal(decodeURIComponent(amName));},120);
         }
       });
@@ -2285,7 +2297,12 @@ function initPAECanadaPanel(PAE_DATA){
     panel.querySelectorAll('.pae-acct-card:not(.no-am)').forEach(function(card){
       card.addEventListener('click',function(){
         var amName=card.dataset.am;
-        if(amName){closePAE();setTimeout(function(){openModal(decodeURIComponent(amName));},120);}
+        if(amName){
+          overlay.classList.remove('open');
+          document.body.style.overflow='';
+          window._paeReturnTo='canada';
+          setTimeout(function(){openModal(decodeURIComponent(amName));},120);
+        }
       });
     });
   }
