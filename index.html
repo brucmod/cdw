@@ -223,6 +223,154 @@
   /* Theme toggle button */
   .theme-btn { display:flex; align-items:center; justify-content:center; background:none; border:1px solid var(--border); border-radius:7px; color:var(--muted); cursor:pointer; padding:7px 9px; transition:all .15s; }
   .theme-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .update-btn { display:flex; align-items:center; gap:5px; background:none; border:1px solid rgba(255,112,35,.4); border-radius:7px; color:var(--accent); cursor:pointer; padding:6px 11px; font-size:11px; font-weight:600; letter-spacing:.03em; transition:all .15s; }
+  .update-btn:hover { background:rgba(255,112,35,.1); border-color:var(--accent); }
+  /* ── Data Manager Panel ─────────────────────────────────────────────── */
+  #upd-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:2000; align-items:flex-start; justify-content:flex-end; padding:56px 14px 14px 0; }
+  #upd-overlay.open { display:flex; }
+  #upd-panel { background:var(--surface); border:1px solid var(--border); border-radius:14px; width:460px; max-width:96vw; max-height:88vh; display:flex; flex-direction:column; box-shadow:0 24px 64px rgba(0,0,0,.45); overflow:hidden; }
+  /* panel header */
+  #upd-head { display:flex; align-items:center; justify-content:space-between; padding:14px 18px 12px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  #upd-head h3 { font-size:13px; font-weight:700; margin:0; display:flex; align-items:center; gap:7px; }
+  .upd-head-actions { display:flex; align-items:center; gap:8px; }
+  #upd-auth-status { font-size:11px; color:var(--muted); }
+  #upd-logout-btn { font-size:11px; background:none; border:1px solid var(--border); border-radius:5px; color:var(--muted); cursor:pointer; padding:3px 8px; }
+  #upd-logout-btn:hover { color:var(--text); border-color:var(--text); }
+  #upd-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:17px; line-height:1; padding:2px 4px; }
+  #upd-close:hover { color:var(--text); }
+  /* login view */
+  #upd-login { padding:24px 20px; }
+  #upd-login p { font-size:12px; color:var(--muted); margin-bottom:16px; }
+  #upd-login label { display:block; font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px; }
+  #upd-pw { width:100%; box-sizing:border-box; padding:9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:13px; outline:none; }
+  #upd-pw:focus { border-color:var(--accent); }
+  #upd-login-btn { margin-top:12px; width:100%; padding:10px; border-radius:8px; border:none; background:var(--accent); color:#fff; font-size:13px; font-weight:700; cursor:pointer; }
+  #upd-login-btn:hover { opacity:.88; }
+  #upd-login-err { margin-top:10px; font-size:12px; color:#f87171; display:none; }
+  /* tabs */
+  #upd-tabs { display:flex; gap:2px; padding:10px 14px 0; flex-shrink:0; border-bottom:1px solid var(--border); }
+  .upd-tab { background:none; border:none; border-bottom:2px solid transparent; padding:6px 9px 9px; font-size:11px; font-weight:600; color:var(--muted); cursor:pointer; transition:all .15s; margin-bottom:-1px; white-space:nowrap; }
+  .upd-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .upd-tab:hover:not(.active) { color:var(--text); }
+  /* tab bodies */
+  #upd-body { flex:1; overflow-y:auto; padding:16px 18px 20px; }
+  .upd-section { display:none; }
+  .upd-section.active { display:block; }
+  .upd-section-title { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin:0 0 12px; }
+  /* org selector */
+  .upd-org-btns { display:flex; gap:6px; margin-bottom:14px; }
+  .upd-org-btn { flex:1; padding:10px 4px; border-radius:8px; border:1px solid var(--border); background:none; color:var(--muted); font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; text-align:center; }
+  .upd-org-btn.sel { border-color:var(--accent); color:var(--accent); background:rgba(255,112,35,.08); }
+  .upd-org-btn:hover:not(.sel) { border-color:var(--text); color:var(--text); }
+  /* drop zone */
+  .upd-drop { border:1.5px dashed var(--border); border-radius:9px; padding:20px 16px; text-align:center; cursor:pointer; transition:all .15s; position:relative; margin-bottom:4px; }
+  .upd-drop:hover, .upd-drop.dragover { border-color:var(--accent); background:rgba(255,112,35,.04); }
+  .upd-drop input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+  .upd-drop-icon { font-size:20px; margin-bottom:5px; }
+  .upd-drop .upd-hint { font-size:12px; color:var(--muted); margin:0; }
+  .upd-drop .upd-hint strong { color:var(--text); }
+  .upd-selected { font-size:12px; color:var(--accent); margin:6px 0 10px; min-height:18px; font-weight:600; }
+  /* progress */
+  .upd-progress-wrap { display:none; margin:12px 0; }
+  .upd-progress-wrap.active { display:block; }
+  .upd-prog-bar { height:6px; background:var(--border); border-radius:3px; overflow:hidden; margin-bottom:6px; }
+  .upd-prog-fill { height:100%; width:0%; background:var(--accent); border-radius:3px; transition:width .3s ease; }
+  .upd-prog-fill.processing { background: linear-gradient(90deg, var(--accent) 0%, #ff9066 50%, var(--accent) 100%); background-size:200% 100%; animation:upd-shimmer 1.2s infinite; }
+  .upd-prog-fill.done { background:#4ade80; }
+  @keyframes upd-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  .upd-prog-text { font-size:11px; color:var(--muted); display:flex; justify-content:space-between; margin-bottom:8px; }
+  /* step list */
+  .upd-steps { list-style:none; margin:0 0 6px; padding:0; display:none; }
+  .upd-steps.visible { display:block; }
+  .upd-step { display:flex; align-items:center; gap:7px; font-size:11px; color:var(--muted); padding:3px 0; transition:color .2s; }
+  .upd-step.active { color:var(--text); font-weight:600; }
+  .upd-step.complete { color:#4ade80; }
+  .upd-step-icon { font-size:13px; width:16px; text-align:center; }
+  /* action buttons row */
+  .upd-actions { display:flex; gap:8px; margin-top:12px; }
+  .upd-btn-upload { flex:2; padding:9px; border-radius:8px; border:none; background:var(--accent); color:#fff; font-size:12px; font-weight:700; cursor:pointer; transition:opacity .15s; }
+  .upd-btn-upload:hover { opacity:.88; }
+  .upd-btn-upload:disabled { opacity:.4; cursor:not-allowed; }
+  .upd-btn-cancel { flex:1; padding:9px; border-radius:8px; border:1px solid var(--border); background:none; color:var(--muted); font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; display:none; }
+  .upd-btn-cancel:hover { border-color:var(--text); color:var(--text); }
+  .upd-btn-cancel.visible { display:block; }
+  /* message */
+  .upd-msg { font-size:12px; border-radius:7px; padding:8px 11px; display:none; margin-top:10px; }
+  .upd-msg.ok  { display:block; background:rgba(34,197,94,.18); border:2px solid rgba(34,197,94,.6); color:#4ade80; font-size:13px; font-weight:700; padding:11px 14px; text-align:center; letter-spacing:.02em; }
+  .upd-msg.err { display:block; background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.3); color:#f87171; }
+  /* review modal */
+  #upd-review-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:3000; align-items:center; justify-content:center; padding:20px; }
+  #upd-review-overlay.open { display:flex; }
+  #upd-review-modal { background:var(--surface); border:1px solid var(--border); border-radius:14px; width:560px; max-width:95vw; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 24px 64px rgba(0,0,0,.5); overflow:hidden; }
+  #upd-review-modal .rm-head { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 14px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  #upd-review-modal .rm-head h3 { font-size:14px; font-weight:700; margin:0; }
+  #upd-review-modal .rm-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:17px; }
+  #upd-review-modal .rm-body { flex:1; overflow-y:auto; padding:18px 20px; }
+  #upd-review-modal .rm-footer { display:flex; gap:10px; padding:14px 20px; border-top:1px solid var(--border); flex-shrink:0; justify-content:flex-end; }
+  /* stat row */
+  .rm-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:18px; }
+  .rm-stat { background:var(--bg); border:1px solid var(--border); border-radius:9px; padding:10px 6px; text-align:center; }
+  .rm-stat .rm-num { font-size:22px; font-weight:800; color:var(--accent); line-height:1; }
+  .rm-stat .rm-lbl { font-size:10px; color:var(--muted); margin-top:4px; text-transform:uppercase; letter-spacing:.04em; }
+  /* detail sections */
+  .rm-section { margin-bottom:14px; }
+  .rm-section h4 { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin:0 0 8px; cursor:pointer; display:flex; align-items:center; gap:5px; user-select:none; }
+  .rm-section h4::after { content:'▸'; font-size:10px; transition:transform .15s; }
+  .rm-section h4.open::after { transform:rotate(90deg); }
+  .rm-collapsible { display:none; }
+  .rm-collapsible.open { display:block; }
+  .rm-detail-text { font-size:12px; color:var(--text); line-height:1.7; }
+  /* people list */
+  .rm-people { display:flex; flex-direction:column; gap:5px; }
+  .rm-person { display:flex; align-items:baseline; justify-content:space-between; gap:8px; background:var(--bg); border-radius:6px; padding:6px 10px; }
+  .rm-person-name { font-size:12px; font-weight:600; }
+  .rm-person-email { font-size:11px; color:var(--muted); }
+  .rm-person-title { font-size:11px; color:var(--muted); white-space:nowrap; }
+  /* change cards */
+  .rm-change-card { background:var(--bg); border-radius:7px; padding:8px 11px; margin-bottom:6px; }
+  .rm-change-name { font-size:12px; font-weight:600; margin-bottom:5px; }
+  .rm-change-email { font-size:11px; color:var(--muted); }
+  .rm-diff { display:flex; gap:6px; align-items:baseline; font-size:11px; margin-top:3px; }
+  .rm-diff-field { color:var(--muted); font-weight:600; min-width:80px; }
+  .rm-diff-old { color:#f87171; text-decoration:line-through; }
+  .rm-diff-new { color:#4ade80; }
+  /* field summary table */
+  .rm-field-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .rm-field-table th { text-align:left; color:var(--muted); font-weight:600; padding:4px 8px; border-bottom:1px solid var(--border); }
+  .rm-field-table td { padding:4px 8px; border-bottom:1px solid var(--border); }
+  /* review footer buttons */
+  .rm-btn-cancel { padding:9px 18px; border-radius:8px; border:1px solid var(--border); background:none; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; }
+  .rm-btn-cancel:hover { border-color:var(--text); color:var(--text); }
+  .rm-btn-download { padding:9px 14px; border-radius:8px; border:1px solid var(--border); background:none; color:var(--text); font-size:12px; font-weight:600; cursor:pointer; display:none; }
+  .rm-btn-download:hover { border-color:var(--accent); color:var(--accent); }
+  .rm-btn-confirm { padding:9px 20px; border-radius:8px; border:none; background:#22c55e; color:#fff; font-size:13px; font-weight:700; cursor:pointer; }
+  .rm-btn-confirm:hover { opacity:.88; }
+  .rm-btn-confirm:disabled { opacity:.45; cursor:not-allowed; }
+  /* sync tab */
+  .upd-sync-list { list-style:none; margin:0 0 14px; padding:0; }
+  .upd-sync-item { display:flex; align-items:center; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--border); font-size:12px; }
+  .upd-sync-item:last-child { border-bottom:none; }
+  .upd-sync-dot { width:7px; height:7px; border-radius:50%; background:var(--border); margin-right:8px; flex-shrink:0; }
+  .upd-sync-dot.ok { background:#4ade80; }
+  .upd-sync-dot.err { background:#f87171; }
+  /* files tab */
+  .upd-files-table { width:100%; border-collapse:collapse; font-size:11px; }
+  .upd-files-table th { text-align:left; color:var(--muted); font-weight:600; padding:5px 6px; border-bottom:1px solid var(--border); font-size:10px; text-transform:uppercase; letter-spacing:.04em; }
+  .upd-files-table td { padding:6px 6px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  .upd-files-table tr:last-child td { border-bottom:none; }
+  .upd-deploy-btn { font-size:10px; padding:3px 8px; border-radius:5px; border:none; background:#22c55e; color:#fff; cursor:pointer; font-weight:600; }
+  .upd-deploy-btn:hover { opacity:.85; }
+  .upd-del-btn { font-size:10px; padding:3px 8px; border-radius:5px; border:1px solid rgba(239,68,68,.4); background:none; color:#f87171; cursor:pointer; font-weight:600; }
+  .upd-del-btn:hover { background:rgba(239,68,68,.1); }
+  .upd-status-live { color:#4ade80; font-weight:600; }
+  .upd-status-old  { color:#fbbf24; font-weight:600; }
+  .upd-status-new  { color:var(--muted); }
+  /* settings tab */
+  .upd-settings-field { margin-bottom:10px; }
+  .upd-settings-field label { display:block; font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+  .upd-settings-field input { width:100%; box-sizing:border-box; padding:8px 11px; border-radius:7px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:12px; outline:none; }
+  .upd-settings-field input:focus { border-color:var(--accent); }
+
   /* Org tree styles — hybrid layout */
   .tree-container { padding:28px 40px; }
   .tree-section { margin-bottom:28px; }
@@ -324,6 +472,10 @@
     <button class="pae-btn" id="pae-ca-btn" title="Browse by Pure Storage Account Executive (Canada)">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M3 20c0-3.9 2.7-7 6-7s6 3.1 6 7"/><circle cx="18" cy="9" r="3"/><path d="M21 20c0-2.8-1.3-5.2-3.3-6.5" stroke-dasharray="2 1.5"/></svg>
       Pure AE View
+    </button>
+    <button class="update-btn" id="update-btn" title="Sync JSON data files to web server">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+      Update
     </button>
     <button class="theme-btn" id="theme-toggle" title="Toggle light/dark theme">
       <svg id="theme-icon-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -520,7 +672,6 @@
   <div class="filters">
     <span class="filter-label">Filter</span>
     <div id="filter-container"></div>
-    <button class="smit-btn" id="smit-btn" onclick="toggleSMIT()" title="Sales Managers in Training">SMIT</button>
     <div class="view-toggle">
       <button class="view-btn" id="btn-table" title="Table"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg></button>
       <button class="view-btn active" id="btn-cards" title="Cards"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
@@ -548,7 +699,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
 <script>
-var APP_VERSION='9.0';
+var APP_VERSION='10.0';
 /* Name overrides — keyed by lowercase email. Applied after XLSX import & JSON load. */
 var NAME_OVERRIDES = {
   'scothie@cdw.com': 'Scott Hiemstra'
@@ -650,7 +801,7 @@ var CDWGEO = {
 };
 
 var CFG = {
-  cdw:{file:'CDW_data_.json',eyebrow:'CDW \u00b7 Sales Organization',title:'CDW Org <em>Directory</em>',hint:'Search name, title, email, manager\u2026',hasMap:true,defaultView:'cards',
+  cdw:{file:'CDW_data.json',eyebrow:'CDW \u00b7 Sales Organization',title:'CDW Org <em>Directory</em>',hint:'Search name, title, email, manager\u2026',hasMap:true,defaultView:'cards',
     filters:[{id:'f-seg',key:'segment',lbl:'All Segments'},{id:'f-ch',key:'channel',lbl:'All Channels'},{id:'f-tier',key:'tier',lbl:'All Tiers'},{id:'f-reg',key:'region',lbl:'All Regions'},{id:'f-dist',key:'district',lbl:'All Districts'},{id:'f-tg',key:'titleGroup',lbl:'All Roles'},{id:'f-mgr',key:'manager',lbl:'All Managers'},{id:'f-state',key:'state',lbl:'All States'},{id:'f-loc',key:'location',lbl:'All Offices',vfn:function(d){var l=d.location||'';if(!l)return null;var cv=l.replace(/\s*-\s*[A-Z]{2}\s*$/,'').replace(/\s*\/\s*\d+\s*$/,'').trim();return cv||null;}}],
     cols:[{k:'name',l:'Name'},{k:'titleGroup',l:'Role'},{k:'segment',l:'Segment'},{k:'channel',l:'Channel'},{k:'tier',l:'Tier'},{k:'region',l:'Region'},{k:'manager',l:'Manager'}],
     grpKey:'manager',
@@ -694,7 +845,7 @@ function updateStickyTops(){
 }
 window.addEventListener('resize',updateStickyTops);
 
-var CACHE={}, ORG='cdw', DATA=[], VIEW='cards', SCOL='name', SDIR=1, SHOW_SMIT=false;
+var CACHE={}, ORG='cdw', DATA=[], VIEW='cards', SCOL='name', SDIR=1;
 var SEARCH_INDEX=[]; // pre-built search strings, parallel to DATA
 var ACCT_SEARCH_INDEX=[]; // account customer names, parallel to DATA
 var lmap=null, lmarkers=[], aloc=null, mq='', mf1='', mf2='';
@@ -806,7 +957,7 @@ function switchOrg(org){
     if(!cfg.hasMap&&VIEW==='map'){VIEW='table';document.querySelectorAll('.view-btn').forEach(function(b){b.classList.remove('active');});document.getElementById('btn-table').classList.add('active');}
     if(cfg.defaultView&&VIEW!==cfg.defaultView){VIEW=cfg.defaultView;document.querySelectorAll('.view-btn').forEach(function(b){b.classList.remove('active');});var dvb=document.getElementById('btn-'+cfg.defaultView);if(dvb)dvb.classList.add('active');}
     populateFilters();
-    var smitBtn=document.getElementById('smit-btn');if(smitBtn){smitBtn.style.display=org==='cdw'?'flex':'none';smitBtn.classList.remove('active');}SHOW_SMIT=false;
+    
     document.getElementById('loading-screen').style.display='none';
     document.getElementById('app-shell').style.display='';
     updateStickyTops();
@@ -867,7 +1018,6 @@ function getFilteredBy(excludeId){
   var cfg=CFG[ORG],q=document.getElementById('search').value.toLowerCase();
   var aq=document.getElementById('acct-search').value.toLowerCase();
   return DATA.filter(function(d,i){
-    if(ORG==='cdw'&&!SHOW_SMIT){var roleEl=document.getElementById('f-tg');if(!(roleEl&&roleEl.value&&/smit/i.test(roleEl.value))&&isSMIT(d))return false;}
     for(var j=0;j<cfg.filters.length;j++){
       var f=cfg.filters[j];
       if(f.id===excludeId)continue;
@@ -917,13 +1067,6 @@ function getFiltered(){
   });
 }
 
-function toggleSMIT(){
-  SHOW_SMIT=!SHOW_SMIT;
-  var btn=document.getElementById('smit-btn');
-  if(btn){btn.classList.toggle('active',SHOW_SMIT);btn.title=SHOW_SMIT?'Hide SMIT records':'Show SMIT records';}
-  render();
-}
-function isSMIT(d){return /smit/i.test(d.titleGroup||'')||/smit/i.test(d.title||'');}
 function render(){
   var fil=getFiltered();
   document.getElementById('count').textContent=fil.length.toLocaleString();
@@ -1535,6 +1678,11 @@ document.getElementById('search').addEventListener('input',function(){
 // Account search: Only search on Enter key
 document.getElementById('acct-search').addEventListener('keydown',function(ev){
   if(ev.key==='Enter'){
+    if(VIEW!=='cards'){
+      VIEW='cards';
+      document.querySelectorAll('.view-btn').forEach(function(b){b.classList.remove('active');});
+      var cb=document.getElementById('btn-cards');if(cb)cb.classList.add('active');
+    }
     refreshFilters(null);
     render();
   }
@@ -2349,6 +2497,738 @@ fetch('pure_ae_canada.json')
   .catch(function(err){ console.error('Pure AE Canada data load failed:', err); });
 
 loadAccounts();
+</script>
+
+<!-- ── Data Manager Panel ───────────────────────────────────────────────── -->
+<div id="upd-overlay">
+  <div id="upd-panel">
+
+    <!-- HEADER -->
+    <div id="upd-head">
+      <h3>&#x21bb; Data Manager</h3>
+      <div class="upd-head-actions">
+        <span id="upd-auth-status"></span>
+        <button id="upd-logout-btn" style="display:none">Logout</button>
+        <button id="upd-close">&#x2715;</button>
+      </div>
+    </div>
+
+    <!-- LOGIN VIEW -->
+    <div id="upd-login">
+      <p>Enter the upload server password to manage org data.</p>
+      <label for="upd-pw">Password</label>
+      <input type="password" id="upd-pw" placeholder="Enter password&#x2026;" autocomplete="current-password">
+      <div id="upd-login-err"></div>
+      <button id="upd-login-btn">Unlock</button>
+    </div>
+
+    <!-- MAIN VIEW -->
+    <div id="upd-main" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+      <div id="upd-tabs">
+        <button class="upd-tab active" data-tab="org">Org Data</button>
+        <button class="upd-tab" data-tab="mapping">Acct Mapping</button>
+        <button class="upd-tab" data-tab="pureae">Pure AE</button>
+        <button class="upd-tab" data-tab="files">Files</button>
+        <button class="upd-tab" data-tab="settings">Settings</button>
+      </div>
+      <div id="upd-body">
+
+        <!-- ORG DATA TAB -->
+        <div class="upd-section active" id="upd-tab-org">
+          <p class="upd-section-title">Step 1 &#8212; Select Organization</p>
+          <div class="upd-org-btns">
+            <button class="upd-org-btn sel" data-org="cdw">&#x1F4CA; CDW</button>
+            <button class="upd-org-btn" data-org="dcs">&#x1F3E2; DCS</button>
+            <button class="upd-org-btn" data-org="canada">&#x1F1E8;&#x1F1E6; Canada</button>
+          </div>
+          <p class="upd-section-title">Step 2 &#8212; Upload File for <span id="org-selected-org-name">CDW</span></p>
+          <div class="upd-drop" id="org-drop">
+            <input type="file" id="org-file" accept=".xlsx,.xls,.csv">
+            <div class="upd-drop-icon">&#x1F4C4;</div>
+            <p class="upd-hint"><strong>Drop file here</strong> or click to browse</p>
+          </div>
+          <div class="upd-selected" id="org-selected-file"></div>
+          <div class="upd-progress-wrap" id="prog-org">
+            <div class="upd-prog-bar"><div class="upd-prog-fill" id="prog-fill-org"></div></div>
+            <div class="upd-prog-text"><span id="prog-pct-org">0%</span><span id="prog-status-org">Uploading&#x2026;</span></div>
+            <ul class="upd-steps" id="steps-org">
+              <li class="upd-step" data-step="upload"><span class="upd-step-icon">&#x2B1C;</span> Uploading file&#x2026;</li>
+              <li class="upd-step" data-step="parsing"><span class="upd-step-icon">&#x2B1C;</span> Parsing Excel file&#x2026;</li>
+              <li class="upd-step" data-step="normalizing"><span class="upd-step-icon">&#x2B1C;</span> Normalizing data&#x2026;</li>
+              <li class="upd-step" data-step="merging"><span class="upd-step-icon">&#x2B1C;</span> Merging records&#x2026;</li>
+              <li class="upd-step" data-step="saving"><span class="upd-step-icon">&#x2B1C;</span> Creating JSON output&#x2026;</li>
+            </ul>
+          </div>
+          <div class="upd-actions">
+            <button class="upd-btn-upload" id="org-go" disabled>Upload &amp; Process</button>
+            <button class="upd-btn-cancel" id="org-cancel">Cancel</button>
+          </div>
+          <div class="upd-msg" id="org-msg"></div>
+        </div>
+
+        <!-- ACCOUNT MAPPING TAB -->
+        <div class="upd-section" id="upd-tab-mapping">
+          <p class="upd-section-title">Upload Account Mapping Excel</p>
+          <div class="upd-drop" id="map-drop">
+            <input type="file" id="map-file" accept=".xlsx,.xls,.csv">
+            <div class="upd-drop-icon">&#x1F5FA;&#xFE0F;</div>
+            <p class="upd-hint"><strong>Drop file here</strong> or click to browse</p>
+          </div>
+          <div class="upd-selected" id="map-selected-file"></div>
+          <div class="upd-progress-wrap" id="prog-map">
+            <div class="upd-prog-bar"><div class="upd-prog-fill" id="prog-fill-map"></div></div>
+            <div class="upd-prog-text"><span id="prog-pct-map">0%</span><span id="prog-status-map">Uploading&#x2026;</span></div>
+            <ul class="upd-steps" id="steps-map">
+              <li class="upd-step" data-step="upload"><span class="upd-step-icon">&#x2B1C;</span> Uploading file&#x2026;</li>
+              <li class="upd-step" data-step="parsing"><span class="upd-step-icon">&#x2B1C;</span> Parsing Excel file&#x2026;</li>
+              <li class="upd-step" data-step="matching"><span class="upd-step-icon">&#x2B1C;</span> Matching accounts to AEs&#x2026;</li>
+              <li class="upd-step" data-step="mapping"><span class="upd-step-icon">&#x2B1C;</span> Building account map&#x2026;</li>
+              <li class="upd-step" data-step="saving"><span class="upd-step-icon">&#x2B1C;</span> Creating JSON output&#x2026;</li>
+            </ul>
+          </div>
+          <div class="upd-actions">
+            <button class="upd-btn-upload" id="map-go" disabled>Upload Account Mapping</button>
+            <button class="upd-btn-cancel" id="map-cancel">Cancel</button>
+          </div>
+          <div class="upd-msg" id="map-msg"></div>
+        </div>
+
+        <!-- PURE AE TAB -->
+        <div class="upd-section" id="upd-tab-pureae">
+          <p class="upd-section-title">Upload Pure AE Mapping Excel</p>
+          <div class="upd-drop" id="pae-drop">
+            <input type="file" id="pae-file" accept=".xlsx,.xls,.csv">
+            <div class="upd-drop-icon">&#x1F9D1;&#x200D;&#x1F4BC;</div>
+            <p class="upd-hint"><strong>Drop file here</strong> or click to browse</p>
+          </div>
+          <div class="upd-selected" id="pae-selected-file"></div>
+          <div class="upd-progress-wrap" id="prog-pae">
+            <div class="upd-prog-bar"><div class="upd-prog-fill" id="prog-fill-pae"></div></div>
+            <div class="upd-prog-text"><span id="prog-pct-pae">0%</span><span id="prog-status-pae">Uploading&#x2026;</span></div>
+            <ul class="upd-steps" id="steps-pae">
+              <li class="upd-step" data-step="upload"><span class="upd-step-icon">&#x2B1C;</span> Uploading file&#x2026;</li>
+              <li class="upd-step" data-step="parsing"><span class="upd-step-icon">&#x2B1C;</span> Parsing Excel file&#x2026;</li>
+              <li class="upd-step" data-step="grouping"><span class="upd-step-icon">&#x2B1C;</span> Grouping by AE&#x2026;</li>
+              <li class="upd-step" data-step="merging"><span class="upd-step-icon">&#x2B1C;</span> Merging with existing data&#x2026;</li>
+              <li class="upd-step" data-step="saving"><span class="upd-step-icon">&#x2B1C;</span> Creating JSON output&#x2026;</li>
+            </ul>
+          </div>
+          <div class="upd-actions">
+            <button class="upd-btn-upload" id="pae-go" disabled>Upload Pure AE Mapping</button>
+            <button class="upd-btn-cancel" id="pae-cancel">Cancel</button>
+          </div>
+          <div class="upd-msg" id="pae-msg"></div>
+        </div>
+
+        <!-- FILES TAB -->
+        <div class="upd-section" id="upd-tab-files">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <p class="upd-section-title" style="margin:0">Generated JSON Files</p>
+            <button id="files-refresh" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">&#x21BB; Refresh</button>
+          </div>
+          <table class="upd-files-table">
+            <thead><tr><th>File</th><th>Records</th><th>Modified</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="upd-files-tbody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:16px">Loading&#x2026;</td></tr></tbody>
+          </table>
+          <div class="upd-msg" id="files-msg"></div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div class="upd-section" id="upd-tab-settings">
+          <p class="upd-section-title">Change Password</p>
+          <div class="upd-settings-field">
+            <label>Current Password</label>
+            <input type="password" id="set-curr" placeholder="Current password">
+          </div>
+          <div class="upd-settings-field">
+            <label>New Password</label>
+            <input type="password" id="set-new" placeholder="New password">
+          </div>
+          <div class="upd-settings-field">
+            <label>Confirm New Password</label>
+            <input type="password" id="set-conf" placeholder="Confirm new password">
+          </div>
+          <button class="upd-btn-upload" id="set-go" style="width:100%;margin-top:6px">Change Password</button>
+          <div class="upd-msg" id="settings-msg"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Review / Confirm Modal ────────────────────────────────────────────── -->
+<div id="upd-review-overlay">
+  <div id="upd-review-modal">
+    <div class="rm-head">
+      <h3>&#x1F4CA; Upload Summary &#8212; Review Changes</h3>
+      <button class="rm-close" id="rm-close">&#x2715;</button>
+    </div>
+    <div class="rm-body">
+      <div class="rm-stats">
+        <div class="rm-stat"><div class="rm-num" id="rm-added">0</div><div class="rm-lbl">Added</div></div>
+        <div class="rm-stat"><div class="rm-num" id="rm-updated">0</div><div class="rm-lbl">Changed</div></div>
+        <div class="rm-stat"><div class="rm-num" id="rm-removed">0</div><div class="rm-lbl">Removed</div></div>
+        <div class="rm-stat"><div class="rm-num" id="rm-total">0</div><div class="rm-lbl">Total</div></div>
+      </div>
+      <div class="rm-section">
+        <div class="rm-detail-text" id="rm-detail"></div>
+      </div>
+      <div class="rm-section" id="rm-sec-fields" style="display:none">
+        <h4 id="rm-h-fields">&#x1F4CA; Field Changes Breakdown</h4>
+        <div class="rm-collapsible" id="rm-c-fields"><table class="rm-field-table"><thead><tr><th>Field</th><th>Records Changed</th></tr></thead><tbody id="rm-field-tbody"></tbody></table></div>
+      </div>
+      <div class="rm-section" id="rm-sec-removed" style="display:none">
+        <h4 id="rm-h-removed">&#x1F6AB; Removed People</h4>
+        <div class="rm-collapsible" id="rm-c-removed"><div class="rm-people" id="rm-removed-list"></div></div>
+      </div>
+      <div class="rm-section" id="rm-sec-added" style="display:none">
+        <h4 id="rm-h-added">&#x2795; Added People</h4>
+        <div class="rm-collapsible" id="rm-c-added"><div class="rm-people" id="rm-added-list"></div></div>
+      </div>
+      <div class="rm-section" id="rm-sec-changed" style="display:none">
+        <h4 id="rm-h-changed">&#x1F504; Sample Field Changes</h4>
+        <div class="rm-collapsible" id="rm-c-changed"><div id="rm-changed-list"></div></div>
+      </div>
+      <div class="rm-section">
+        <h4 style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">&#x26A0;&#xFE0F; Important Notes</h4>
+        <ul style="font-size:12px;color:var(--muted);margin-left:16px;line-height:1.8;">
+          <li>A backup of the current JSON will be created before replacement</li>
+          <li>Click &#x201C;Update JSON File&#x201D; to apply, or Cancel to discard</li>
+        </ul>
+      </div>
+    </div>
+    <div class="rm-footer">
+      <button class="rm-btn-download" id="rm-download">&#x1F4E5; Download Report</button>
+      <button class="rm-btn-cancel" id="rm-cancel-btn">Cancel &#8212; Don&#x2019;t Update</button>
+      <button class="rm-btn-confirm" id="rm-confirm-btn">Update Data</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var BASE = 'http://10.224.114.154:3000';
+  var _token = null;
+  var _selectedOrg = 'cdw';
+  var _pendingData = null;
+  var _processingTimers = {};
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function $(id){ return document.getElementById(id); }
+  function authFetch(url, opts){
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    if(_token) opts.headers['Authorization'] = 'Bearer '+_token;
+    return fetch(BASE+url, opts)
+      .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, status:r.status, data:d}; }); });
+  }
+  function setMsg(id, type, html){
+    var el = $(id);
+    el.className = 'upd-msg '+(type||'');
+    el.innerHTML = html;
+  }
+  function clearMsg(id){ var el=$(id); el.className='upd-msg'; el.innerHTML=''; }
+
+  // ── Open / Close panel ─────────────────────────────────────────────────────
+  $('update-btn').addEventListener('click', function(){
+    $('upd-overlay').classList.add('open');
+    if(!_token) setTimeout(function(){ $('upd-pw').focus(); }, 80);
+  });
+  $('upd-close').addEventListener('click', function(){ $('upd-overlay').classList.remove('open'); });
+  $('upd-overlay').addEventListener('click', function(e){ if(e.target===$('upd-overlay')) $('upd-overlay').classList.remove('open'); });
+
+  // ── Login ──────────────────────────────────────────────────────────────────
+  $('upd-pw').addEventListener('keydown', function(e){ if(e.key==='Enter') $('upd-login-btn').click(); });
+  $('upd-login-btn').addEventListener('click', function(){
+    var pw = $('upd-pw').value.trim();
+    if(!pw){ showLoginErr('Enter the password.'); return; }
+    $('upd-login-btn').textContent='Unlocking\u2026';
+    $('upd-login-btn').disabled=true;
+    $('upd-login-err').style.display='none';
+    fetch(BASE+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})})
+      .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,data:d}; }); })
+      .then(function(res){
+        if(!res.ok||!res.data.token) throw new Error(res.data.error||'Wrong password.');
+        _token = res.data.token;
+        $('upd-login').style.display='none';
+        $('upd-main').style.display='flex';
+        $('upd-auth-status').textContent='Authenticated \u2713';
+        $('upd-logout-btn').style.display='';
+        refreshFiles();
+      })
+      .catch(function(e){
+        showLoginErr(e.message);
+        $('upd-login-btn').textContent='Unlock';
+        $('upd-login-btn').disabled=false;
+      });
+  });
+  function showLoginErr(m){ $('upd-login-err').textContent=m; $('upd-login-err').style.display='block'; }
+
+  $('upd-logout-btn').addEventListener('click', function(){
+    if(_token) fetch(BASE+'/api/logout',{method:'POST',headers:{'Authorization':'Bearer '+_token}});
+    _token=null;
+    $('upd-login').style.display='';
+    $('upd-main').style.display='none';
+    $('upd-pw').value='';
+    $('upd-auth-status').textContent='';
+    $('upd-logout-btn').style.display='none';
+  });
+
+  // ── Tabs ───────────────────────────────────────────────────────────────────
+  document.querySelectorAll('.upd-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.upd-tab').forEach(function(b){ b.classList.remove('active'); });
+      document.querySelectorAll('.upd-section').forEach(function(s){ s.classList.remove('active'); });
+      btn.classList.add('active');
+      $('upd-tab-'+btn.dataset.tab).classList.add('active');
+      if(btn.dataset.tab==='files') refreshFiles();
+    });
+  });
+
+  // ── Org selector ───────────────────────────────────────────────────────────
+  document.querySelectorAll('.upd-org-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.upd-org-btn').forEach(function(b){ b.classList.remove('sel'); });
+      btn.classList.add('sel');
+      _selectedOrg = btn.dataset.org;
+      var names={cdw:'CDW',dcs:'DCS',canada:'Canada'};
+      $('org-selected-org-name').textContent = names[_selectedOrg]||_selectedOrg;
+    });
+  });
+
+  // ── Drop zones ─────────────────────────────────────────────────────────────
+  function wireZone(dropId, fileId, selectedId, goId){
+    var drop=$(dropId), inp=$(fileId), sel=$(selectedId), go=$(goId);
+    function update(){
+      if(inp.files&&inp.files[0]){
+        sel.textContent='\u2713 '+inp.files[0].name;
+        go.disabled=false;
+      } else { sel.textContent=''; go.disabled=true; }
+    }
+    inp.addEventListener('change', function(){ go.style.opacity=''; update(); });
+    drop.addEventListener('dragover',function(e){e.preventDefault();drop.classList.add('dragover');});
+    drop.addEventListener('dragleave',function(){drop.classList.remove('dragover');});
+    drop.addEventListener('drop',function(e){
+      e.preventDefault(); drop.classList.remove('dragover');
+      var f=e.dataTransfer.files[0];
+      if(f){ try{var dt=new DataTransfer();dt.items.add(f);inp.files=dt.files;}catch(ex){}
+        sel.textContent='\u2713 '+f.name; go.disabled=false; go.style.opacity=''; }
+    });
+  }
+  wireZone('org-drop','org-file','org-selected-file','org-go');
+  wireZone('map-drop','map-file','map-selected-file','map-go');
+  wireZone('pae-drop','pae-file','pae-selected-file','pae-go');
+
+  // ── Progress helpers ───────────────────────────────────────────────────────
+  function initProgress(key, steps){
+    var wrap=$('prog-'+key), fill=$('prog-fill-'+key), pct=$('prog-pct-'+key), status=$('prog-status-'+key);
+    var stepsEl=$('steps-'+key);
+    wrap.classList.add('active');
+    stepsEl.classList.add('visible');
+    fill.style.width='0%'; fill.className='upd-prog-fill';
+    pct.textContent='0%'; status.textContent='Uploading\u2026';
+    stepsEl.querySelectorAll('.upd-step').forEach(function(s){
+      s.classList.remove('active','complete');
+      s.querySelector('.upd-step-icon').textContent='\u2B1C';
+    });
+    setStepActive(key,'upload');
+  }
+  function setStepActive(key,name){
+    var el=$('steps-'+key);
+    el.querySelectorAll('.upd-step').forEach(function(s){
+      if(s.dataset.step===name){ s.classList.add('active'); s.querySelector('.upd-step-icon').textContent='\u23F3'; }
+    });
+  }
+  function setStepDone(key,name){
+    var el=$('steps-'+key).querySelector('[data-step="'+name+'"]');
+    if(el){ el.classList.remove('active'); el.classList.add('complete'); el.querySelector('.upd-step-icon').textContent='\u2705'; }
+  }
+  function startProcessingAnim(key, steps){
+    var fill=$('prog-fill-'+key), pct=$('prog-pct-'+key), status=$('prog-status-'+key);
+    fill.style.width='60%'; pct.textContent='60%'; status.textContent='Processing\u2026';
+    fill.classList.add('processing');
+    setStepDone(key,steps[0]);
+    setStepActive(key,steps[1]);
+    var idx=1; var sz=35/(steps.length-1);
+    _processingTimers[key]=setInterval(function(){
+      if(idx<steps.length-1){
+        setStepDone(key,steps[idx]); idx++;
+        setStepActive(key,steps[idx]);
+        var p=Math.round(60+sz*idx);
+        fill.style.width=p+'%'; pct.textContent=p+'%';
+      }
+    },800);
+  }
+  function finishProgress(key, steps){
+    if(_processingTimers[key]){ clearInterval(_processingTimers[key]); delete _processingTimers[key]; }
+    var fill=$('prog-fill-'+key), pct=$('prog-pct-'+key), status=$('prog-status-'+key);
+    fill.classList.remove('processing'); fill.classList.add('done');
+    fill.style.width='100%'; pct.textContent='100%'; status.textContent='Complete!';
+    steps.forEach(function(s){ setStepDone(key,s); });
+  }
+  function resetProgress(key){
+    if(_processingTimers[key]){ clearInterval(_processingTimers[key]); delete _processingTimers[key]; }
+    var wrap=$('prog-'+key), fill=$('prog-fill-'+key), pct=$('prog-pct-'+key), status=$('prog-status-'+key);
+    wrap.classList.remove('active');
+    $('steps-'+key).classList.remove('visible');
+    fill.style.width='0%'; fill.className='upd-prog-fill';
+    pct.textContent='0%'; status.textContent='Uploading\u2026';
+  }
+
+  // ── Generic XHR upload ─────────────────────────────────────────────────────
+  function doUpload(key, steps, endpoint, formData, goId, cancelId, msgId, onSuccess){
+    var go=$(goId), cancel=$(cancelId);
+    go.disabled=true; cancel.classList.add('visible');
+    clearMsg(msgId); initProgress(key, steps);
+    var xhr=new XMLHttpRequest();
+    var aborted=false;
+
+    cancel.onclick=function(){
+      aborted=true; xhr.abort();
+      cancel.classList.remove('visible');
+      resetProgress(key);
+      go.disabled=false;
+      setMsg(msgId,'err','Upload cancelled.');
+    };
+
+    xhr.upload.addEventListener('progress',function(e){
+      if(!e.lengthComputable) return;
+      var p=Math.round((e.loaded/e.total)*60/100);
+      $('prog-fill-'+key).style.width=p+'%';
+      $('prog-pct-'+key).textContent=p+'%';
+    });
+    xhr.upload.addEventListener('load',function(){
+      startProcessingAnim(key, steps);
+    });
+    xhr.addEventListener('load',function(){
+      finishProgress(key, steps);
+      setTimeout(function(){
+        cancel.classList.remove('visible');
+        setTimeout(function(){ resetProgress(key); go.disabled=false; }, 1500);
+        if(aborted) return;
+        if(xhr.status===200){
+          var result=JSON.parse(xhr.responseText);
+          onSuccess(result);
+        } else {
+          try{ var err=JSON.parse(xhr.responseText); setMsg(msgId,'err','Error: '+(err.error||'Upload failed.')); }
+          catch(ex){ setMsg(msgId,'err','Upload failed.'); }
+        }
+      },600);
+    });
+    xhr.addEventListener('error',function(){
+      if(aborted) return;
+      finishProgress(key,steps);
+      cancel.classList.remove('visible');
+      resetProgress(key); go.disabled=false;
+      setMsg(msgId,'err','Network error. Check server.');
+    });
+    xhr.open('POST',BASE+endpoint);
+    xhr.setRequestHeader('Authorization','Bearer '+_token);
+    xhr.send(formData);
+  }
+
+  // ── ORG UPLOAD ─────────────────────────────────────────────────────────────
+  var ORG_STEPS=['upload','parsing','normalizing','merging','saving'];
+  $('org-go').addEventListener('click',function(){
+    var file=$('org-file').files[0]; if(!file) return;
+    var fd=new FormData(); fd.append('file',file); fd.append('orgType',_selectedOrg);
+    doUpload('org',ORG_STEPS,'/api/upload/org',fd,'org-go','org-cancel','org-msg',function(result){
+      _pendingData = Object.assign({},result,{orgType:_selectedOrg,fileName:file.name});
+      showReview(_pendingData);
+    });
+  });
+
+  // ── MAPPING UPLOAD ─────────────────────────────────────────────────────────
+  var MAP_STEPS=['upload','parsing','matching','mapping','saving'];
+  $('map-go').addEventListener('click',function(){
+    var file=$('map-file').files[0]; if(!file) return;
+    var fd=new FormData(); fd.append('file',file);
+    doUpload('map',MAP_STEPS,'/api/upload/mapping',fd,'map-go','map-cancel','map-msg',function(result){
+      _pendingData = Object.assign({},result,{fileName:file.name,isMapping:true});
+      showReview(_pendingData);
+    });
+  });
+
+  // ── PURE AE UPLOAD ─────────────────────────────────────────────────────────
+  var PAE_STEPS=['upload','parsing','grouping','merging','saving'];
+  $('pae-go').addEventListener('click',function(){
+    var file=$('pae-file').files[0]; if(!file) return;
+    var fd=new FormData(); fd.append('file',file);
+    doUpload('pae',PAE_STEPS,'/api/upload/pure-ae',fd,'pae-go','pae-cancel','pae-msg',function(result){
+      _pendingData = Object.assign({},result,{fileName:file.name,isPureAE:true});
+      showReview(_pendingData);
+    });
+  });
+
+  // ── REVIEW MODAL ───────────────────────────────────────────────────────────
+  function showReview(data){
+    // Stats row
+    if(data.isPureAE){
+      var sc=data.cdw&&data.cdw.stats||{}, sca=data.canada&&data.canada.stats||{};
+      $('rm-added').textContent   = (sc.addedAEs||0)+(sca.addedAEs||0);
+      $('rm-updated').textContent = (sc.updatedAEs||0)+(sca.updatedAEs||0);
+      $('rm-removed').textContent = 0;
+      $('rm-total').textContent   = (sc.totalAEs||0)+(sca.totalAEs||0);
+      var det='<strong>Pure AE Mapping Upload</strong><br>';
+      det+='<strong>File:</strong> '+data.fileName+'<br>';
+      det+='<strong>Rows Processed:</strong> '+data.recordsProcessed+'<br>';
+      if((sc.skipped||0)>0) det+='<strong>Skipped:</strong> '+sc.skipped+' rows (missing AE name or customer#)<br>';
+      det+='<br>';
+      det+='<strong>\uD83C\uDDFA\uD83C\uDDF8 CDW (pure_ae_mapping.json)</strong><br>';
+      det+='\u2022 '+(sc.totalAEs||0)+' total AEs \u00B7 '+(sc.addedAEs||0)+' new \u00B7 '+(sc.updatedAEs||0)+' updated<br>';
+      det+='\u2022 '+(sc.addedAccounts||0)+' accounts added \u00B7 '+(sc.updatedAccounts||0)+' updated<br><br>';
+      det+='<strong>\uD83C\uDDE8\uD83C\uDDE6 Canada (pure_ae_canada.json)</strong><br>';
+      det+='\u2022 '+(sca.totalAEs||0)+' total AEs \u00B7 '+(sca.addedAEs||0)+' new \u00B7 '+(sca.updatedAEs||0)+' updated<br>';
+      det+='\u2022 '+(sca.addedAccounts||0)+' accounts added \u00B7 '+(sca.updatedAccounts||0)+' updated';
+      $('rm-detail').innerHTML=det;
+      ['rm-sec-fields','rm-sec-removed','rm-sec-added','rm-sec-changed'].forEach(function(id){$(id).style.display='none';});
+      $('rm-download').style.display='none';
+    } else if(data.isMapping){
+      var s=data.stats||{};
+      $('rm-added').textContent   = s.mapped||0;
+      $('rm-updated').textContent = s.emailMatches||0;
+      $('rm-removed').textContent = s.nameMatches||0;
+      $('rm-total').textContent   = data.recordsProcessed||0;
+      var det='<strong>Account Mapping Upload</strong><br>';
+      det+='<strong>File:</strong> '+data.fileName+'<br>';
+      det+='<strong>Total Rows Processed:</strong> '+data.recordsProcessed+'<br><br>';
+      det+='<strong>Mapping Results:</strong><br>';
+      det+='\u2022 '+(s.mapped||0)+' accounts mapped<br>';
+      det+='\u2022 '+(s.emailMatches||0)+' matched by email<br>';
+      det+='\u2022 '+(s.nameMatches||0)+' matched by name fallback<br>';
+      det+='\u2022 '+(s.houseMatches||0)+' assigned to house accounts<br>';
+      det+='\u2022 '+(s.noMatch||0)+' no match found<br>';
+      det+='\u2022 '+(s.noCustomer||0)+' skipped (no customer)<br>';
+      det+='<br><strong>Output File:</strong> '+data.actualFilename;
+      $('rm-detail').innerHTML=det;
+      ['rm-sec-fields','rm-sec-removed','rm-sec-added','rm-sec-changed'].forEach(function(id){$(id).style.display='none';});
+      $('rm-download').style.display='none';
+    } else {
+      var s=data.stats||{};
+      $('rm-added').textContent   = s.added||0;
+      $('rm-updated').textContent = s.realChanges||s.updated||0;
+      $('rm-removed').textContent = s.removed||0;
+      $('rm-total').textContent   = data.recordsProcessed||0;
+      var det='<strong>Organization Type:</strong> '+((data.orgType||'').toUpperCase())+'<br>';
+      det+='<strong>File:</strong> '+data.fileName+'<br>';
+      det+='<strong>Records Processed:</strong> '+data.recordsProcessed+'<br><br>';
+      det+='<strong>Summary:</strong><br>';
+      det+='\u2022 '+(s.added||0)+' new records will be added<br>';
+      det+='\u2022 '+(s.realChanges||0)+' records have real field changes<br>';
+      if((s.removed||0)>0) det+='\u2022 <span style="color:#f87171;font-weight:600;">'+(s.removed)+' records will be removed</span><br>';
+      det+='<br><strong>Output File:</strong> '+data.outputFile;
+      $('rm-detail').innerHTML=det;
+      // Field changes
+      var hasFields=data.fieldChangeSummary&&Object.keys(data.fieldChangeSummary).length>0;
+      $('rm-sec-fields').style.display=hasFields?'':'none';
+      if(hasFields){
+        var rows=''; Object.entries(data.fieldChangeSummary).sort(function(a,b){return b[1]-a[1];}).forEach(function(e){rows+='<tr><td>'+e[0]+'</td><td>'+e[1]+'</td></tr>';});
+        $('rm-field-tbody').innerHTML=rows;
+      }
+      // Removed people
+      var hasRem=data.removedPeople&&data.removedPeople.length>0;
+      $('rm-sec-removed').style.display=hasRem?'':'none';
+      if(hasRem){
+        var html=''; data.removedPeople.forEach(function(p){html+='<div class="rm-person"><div><span class="rm-person-name">'+p.name+'</span> <span class="rm-person-email">&lt;'+p.email+'&gt;</span></div><span class="rm-person-title">'+p.title+'</span></div>';});
+        $('rm-removed-list').innerHTML=html;
+      }
+      // Added people
+      var hasAdd=data.addedPeople&&data.addedPeople.length>0;
+      $('rm-sec-added').style.display=hasAdd?'':'none';
+      if(hasAdd){
+        var html='<p style="font-size:11px;color:var(--muted);margin-bottom:6px;">Showing '+data.addedPeople.length+' of '+(s.added)+' added</p><div class="rm-people">';
+        data.addedPeople.forEach(function(p){html+='<div class="rm-person"><div><span class="rm-person-name">'+p.name+'</span> <span class="rm-person-email">&lt;'+p.email+'&gt;</span></div><span class="rm-person-title">'+p.title+'</span></div>';});
+        $('rm-added-list').innerHTML=html+'</div>';
+      }
+      // Changed details
+      var hasChg=data.changedDetails&&data.changedDetails.length>0;
+      $('rm-sec-changed').style.display=hasChg?'':'none';
+      if(hasChg){
+        var html='<p style="font-size:11px;color:var(--muted);margin-bottom:6px;">Showing '+data.changedDetails.length+' of '+(s.realChanges||'?')+' changed records</p>';
+        data.changedDetails.forEach(function(ch){
+          html+='<div class="rm-change-card"><div class="rm-change-name">'+ch.name+' <span class="rm-change-email">&lt;'+ch.email+'&gt;</span></div>';
+          ch.changes.forEach(function(d){html+='<div class="rm-diff"><span class="rm-diff-field">'+d.field+':</span><span class="rm-diff-old">'+(d.oldVal||'(empty)')+'</span><span style="color:var(--muted);margin:0 4px">\u2192</span><span class="rm-diff-new">'+(d.newVal||'(empty)')+'</span></div>';});
+          html+='</div>';
+        });
+        $('rm-changed-list').innerHTML=html;
+      }
+      $('rm-download').style.display=(hasRem||hasAdd||hasChg)?'':'none';
+    }
+    // wire collapsible section headers
+    document.querySelectorAll('#upd-review-modal .rm-section h4[id^="rm-h-"]').forEach(function(h){
+      h.onclick=function(){
+        var cid=h.id.replace('rm-h-','rm-c-');
+        var c=$(cid); h.classList.toggle('open'); c&&c.classList.toggle('open');
+      };
+    });
+    $('upd-review-overlay').classList.add('open');
+  }
+
+  function closeReview(){
+    $('upd-review-overlay').classList.remove('open');
+    _pendingData=null;
+  }
+  $('rm-close').addEventListener('click',closeReview);
+  $('rm-cancel-btn').addEventListener('click',closeReview);
+  $('upd-review-overlay').addEventListener('click',function(e){if(e.target===$('upd-review-overlay'))closeReview();});
+
+  // ── DOWNLOAD REPORT ────────────────────────────────────────────────────────
+  $('rm-download').addEventListener('click',function(){
+    var d=_pendingData; if(!d) return;
+    var s=d.stats||{}, ts=new Date().toLocaleString();
+    var r='CDW Upload Change Report\n========================\n';
+    r+='Date: '+ts+'\nOrg: '+((d.orgType||'N/A').toUpperCase())+'\nFile: '+(d.fileName||'')+'\nRecords: '+d.recordsProcessed+'\n\n';
+    r+='SUMMARY\n-------\nAdded: '+(s.added||0)+'\nUpdated: '+(s.realChanges||s.updated||0)+'\nRemoved: '+(s.removed||0)+'\n\n';
+    if(d.fieldChangeSummary&&Object.keys(d.fieldChangeSummary).length){
+      r+='FIELD CHANGES\n-------------\n';
+      Object.entries(d.fieldChangeSummary).sort(function(a,b){return b[1]-a[1];}).forEach(function(e){r+='  '+e[0]+': '+e[1]+' records\n';});
+      r+='\n';
+    }
+    if(d.removedPeople&&d.removedPeople.length){
+      r+='REMOVED PEOPLE ('+d.removedPeople.length+')\n'+'\u2500'.repeat(36)+'\n';
+      d.removedPeople.forEach(function(p){r+='  '+p.name+'  <'+p.email+'>  '+p.title+'\n';}); r+='\n';
+    }
+    if(d.addedPeople&&d.addedPeople.length){
+      r+='ADDED PEOPLE ('+d.addedPeople.length+')\n'+'\u2500'.repeat(36)+'\n';
+      d.addedPeople.forEach(function(p){r+='  '+p.name+'  <'+p.email+'>  '+p.title+'\n';}); r+='\n';
+    }
+    if(d.changedDetails&&d.changedDetails.length){
+      r+='FIELD CHANGES DETAIL\n'+'\u2500'.repeat(36)+'\n';
+      d.changedDetails.forEach(function(ch){
+        r+='\n  '+ch.name+' <'+ch.email+'>\n';
+        ch.changes.forEach(function(x){r+='    '+x.field+': "'+x.oldVal+'" \u2192 "'+x.newVal+'"\n';});
+      });
+    }
+    var blob=new Blob([r],{type:'text/plain'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=url; a.download='change-report-'+((d.orgType||'upload').toUpperCase())+'-'+Date.now()+'.txt';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  });
+
+  // ── CONFIRM UPDATE ─────────────────────────────────────────────────────────
+  $('rm-confirm-btn').addEventListener('click',function(){
+    var d=_pendingData; if(!d) return;
+    var btn=$('rm-confirm-btn');
+    btn.disabled=true; btn.textContent='Updating\u2026';
+    var msgId = d.isPureAE?'pae-msg': d.isMapping?'map-msg':'org-msg';
+
+    var doApply;
+    if(d.isPureAE){
+      doApply = authFetch('/api/apply-changes',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({orgType:'pure-ae',outputFile:d.cdw.outputFile,actualFilename:d.cdw.actualFilename})})
+      .then(function(r1){
+        if(!r1.ok) throw new Error(d.cdw.actualFilename+': '+(r1.data.error||'failed'));
+        return authFetch('/api/apply-changes',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({orgType:'pure-ae',outputFile:d.canada.outputFile,actualFilename:d.canada.actualFilename})});
+      }).then(function(r2){
+        if(!r2.ok) throw new Error(d.canada.actualFilename+': '+(r2.data.error||'failed'));
+        return authFetch('/api/copy-to-www/pure_ae_mapping.json',{method:'POST'})
+          .then(function(){ return authFetch('/api/copy-to-www/pure_ae_canada.json',{method:'POST'}); });
+      });
+    } else if(d.isMapping){
+      doApply = authFetch('/api/apply-changes',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({orgType:'CDW_accounts',outputFile:d.outputFile,actualFilename:d.actualFilename})})
+      .then(function(r){
+        if(!r.ok) throw new Error(r.data.error||'Apply failed');
+        return authFetch('/api/copy-to-www/CDW_accounts.json',{method:'POST'});
+      });
+    } else {
+      doApply = authFetch('/api/apply-changes',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({orgType:d.orgType,outputFile:d.outputFile})})
+      .then(function(r){
+        if(!r.ok) throw new Error(r.data.error||'Apply failed');
+        return authFetch('/api/copy-to-www/'+getOrgFilename(d.orgType),{method:'POST'});
+      });
+    }
+
+    doApply.then(function(){
+      // Clear file input + selected label for whichever tab was used
+      var fileMap = {
+        'org-msg':  {file:'org-file',  sel:'org-selected-file',  go:'org-go'},
+        'map-msg':  {file:'map-file',  sel:'map-selected-file',  go:'map-go'},
+        'pae-msg':  {file:'pae-file',  sel:'pae-selected-file',  go:'pae-go'}
+      };
+      var m = fileMap[msgId];
+      if(m){
+        var fi=$(m.file); if(fi){ try{fi.value='';}catch(e){} }
+        var si=$(m.sel); if(si){ si.textContent=''; }
+        var gi=$(m.go); if(gi){ gi.disabled=true; gi.style.opacity='0.35'; }
+      }
+      setMsg(msgId,'ok','\u2713 Updated & live.');
+      closeReview();
+      refreshFiles();
+    }).catch(function(e){
+      setMsg(msgId,'err','Error: '+e.message);
+      closeReview();
+    }).finally(function(){
+      btn.disabled=false; btn.textContent='Update Data';
+    });
+  });
+
+  // ── FILES TAB ──────────────────────────────────────────────────────────────
+  $('files-refresh').addEventListener('click', refreshFiles);
+  function refreshFiles(){
+    if(!_token) return;
+    authFetch('/api/status').then(function(res){
+      if(!res.ok) return;
+      var tbody=$('upd-files-tbody'), files=res.data.jsonFiles||[];
+      if(!files.length){ tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:14px">No files yet</td></tr>'; return; }
+      tbody.innerHTML='';
+      files.forEach(function(f){
+        var status=f.deployStatus||'not_deployed';
+        var statusHtml= status==='live'?'<span class="upd-status-live">\u2713 Live</span>':
+                        status==='outdated'?'<span class="upd-status-old">\u26A0 Outdated</span>':
+                        '<span class="upd-status-new">Not deployed</span>';
+        var deployBtn= status!=='live'?'<button class="upd-deploy-btn" data-file="'+f.name+'">Deploy</button>':'';
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td style="word-break:break-all">'+f.name+'</td><td>'+f.records+'</td><td style="white-space:nowrap">'+new Date(f.modified).toLocaleDateString()+'</td><td>'+statusHtml+'</td><td style="display:flex;gap:4px;flex-wrap:wrap">'+deployBtn+'<button class="upd-del-btn" data-file="'+f.name+'">Del</button></td>';
+        tbody.appendChild(tr);
+      });
+      // wire deploy/delete buttons
+      tbody.querySelectorAll('.upd-deploy-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){ deployFile(btn.dataset.file); });
+      });
+      tbody.querySelectorAll('.upd-del-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          if(confirm('Delete '+btn.dataset.file+'? This cannot be undone.')) deleteFile(btn.dataset.file);
+        });
+      });
+    });
+  }
+  function deployFile(name){
+    authFetch('/api/copy-to-www/'+encodeURIComponent(name),{method:'POST'}).then(function(r){
+      if(r.ok&&r.data.success){ setMsg('files-msg','ok','\u2713 '+name+' deployed.'); refreshFiles(); }
+      else setMsg('files-msg','err','Error: '+(r.data.error||'failed'));
+    });
+  }
+  function deleteFile(name){
+    authFetch('/api/delete-file/'+encodeURIComponent(name),{method:'POST'}).then(function(r){
+      if(r.ok){ setMsg('files-msg','ok','\u2713 '+name+' deleted.'); refreshFiles(); }
+      else setMsg('files-msg','err','Error: '+(r.data.error||'failed'));
+    });
+  }
+
+  // ── SETTINGS TAB ──────────────────────────────────────────────────────────
+  $('set-go').addEventListener('click',function(){
+    var curr=$('set-curr').value, newp=$('set-new').value, conf=$('set-conf').value;
+    if(!curr||!newp||!conf){ setMsg('settings-msg','err','All fields required.'); return; }
+    if(newp!==conf){ setMsg('settings-msg','err','Passwords do not match.'); return; }
+    authFetch('/api/change-password',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({currentPassword:curr,newPassword:newp})})
+    .then(function(r){
+      if(r.ok) setMsg('settings-msg','ok','\u2713 Password changed.');
+      else setMsg('settings-msg','err',r.data.error||'Error.');
+    });
+  });
+
+  // ── Util ───────────────────────────────────────────────────────────────────
+  function getOrgFilename(org){
+    return {cdw:'CDW_data.json',dcs:'dcs_data.json',canada:'canada_data.json'}[org]||(org+'.json');
+  }
+})();
 </script>
 </body>
 </html>
