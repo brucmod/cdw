@@ -1,0 +1,6 @@
+nohup: ignoring input
+CDW Admin Dashboard running on http://localhost:3000
+Upload directory: /var/www/html/cdw/uploads
+JSON output directory: /var/www/html/cdw/json-output
+Web directory target: /var/www/html/cdw
+Default password: admin123
