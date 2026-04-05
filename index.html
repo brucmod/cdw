@@ -2897,56 +2897,102 @@ loadAccounts();
     pct.textContent='0%'; status.textContent='Uploading\u2026';
   }
 
-  // ── Generic XHR upload ─────────────────────────────────────────────────────
+  // ── Generic upload with real server-streamed progress ─────────────────────
   function doUpload(key, steps, endpoint, formData, goId, cancelId, msgId, onSuccess){
     var go=$(goId), cancel=$(cancelId);
     go.disabled=true; cancel.classList.add('visible');
     clearMsg(msgId); initProgress(key, steps);
-    var xhr=new XMLHttpRequest();
     var aborted=false;
 
     cancel.onclick=function(){
-      aborted=true; xhr.abort();
+      aborted=true;
       cancel.classList.remove('visible');
       resetProgress(key);
       go.disabled=false;
       setMsg(msgId,'err','Upload cancelled.');
     };
 
-    xhr.upload.addEventListener('progress',function(e){
-      if(!e.lengthComputable) return;
-      var p=Math.round((e.loaded/e.total)*60/100);
-      $('prog-fill-'+key).style.width=p+'%';
-      $('prog-pct-'+key).textContent=p+'%';
-    });
-    xhr.upload.addEventListener('load',function(){
-      startProcessingAnim(key, steps);
-    });
-    xhr.addEventListener('load',function(){
-      finishProgress(key, steps);
-      setTimeout(function(){
-        cancel.classList.remove('visible');
-        setTimeout(function(){ resetProgress(key); go.disabled=false; }, 1500);
-        if(aborted) return;
-        if(xhr.status===200){
-          var result=JSON.parse(xhr.responseText);
-          onSuccess(result);
-        } else {
-          try{ var err=JSON.parse(xhr.responseText); setMsg(msgId,'err','Error: '+(err.error||'Upload failed.')); }
-          catch(ex){ setMsg(msgId,'err','Upload failed.'); }
-        }
-      },600);
-    });
-    xhr.addEventListener('error',function(){
+    // Use fetch so we can read the response as a stream
+    fetch(BASE+endpoint,{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+_token},
+      body:formData
+    }).then(function(response){
+      if(aborted) return;
+      var reader=response.body.getReader();
+      var decoder=new TextDecoder();
+      var buffer='';
+      var lastResult=null;
+
+      function read(){
+        return reader.read().then(function(chunk){
+          if(aborted) return;
+          if(chunk.done){
+            // Process any remaining buffer
+            if(buffer.trim()){
+              try{ lastResult=JSON.parse(buffer.trim()); }catch(ex){}
+            }
+            // Finish up
+            finishProgress(key, steps);
+            setTimeout(function(){
+              cancel.classList.remove('visible');
+              setTimeout(function(){ resetProgress(key); go.disabled=false; },1500);
+              if(lastResult && lastResult.success){
+                onSuccess(lastResult);
+              } else if(lastResult && lastResult.error){
+                setMsg(msgId,'err','Error: '+lastResult.error);
+              } else {
+                setMsg(msgId,'err','Upload failed — no valid response.');
+              }
+            },400);
+            return;
+          }
+
+          buffer+=decoder.decode(chunk.value,{stream:true});
+          // Process complete lines
+          var lines=buffer.split('\n');
+          buffer=lines.pop(); // keep incomplete last line in buffer
+
+          lines.forEach(function(line){
+            line=line.trim();
+            if(!line) return;
+            try{
+              var msg=JSON.parse(line);
+              if(msg._progress){
+                // Real server progress — update bar and steps
+                var fill=$('prog-fill-'+key), pct=$('prog-pct-'+key), status=$('prog-status-'+key);
+                fill.style.width=msg.pct+'%';
+                pct.textContent=msg.pct+'%';
+                status.textContent=msg.detail||'Processing\u2026';
+                fill.classList.remove('processing');
+                // Light up the matching step
+                var stepIdx=steps.indexOf(msg.step);
+                if(stepIdx>=0){
+                  for(var i=0;i<stepIdx;i++) setStepDone(key,steps[i]);
+                  setStepActive(key,steps[stepIdx]);
+                }
+                if(msg.step==='complete'){
+                  steps.forEach(function(s){ setStepDone(key,s); });
+                }
+              } else {
+                // Final result JSON
+                lastResult=msg;
+              }
+            }catch(ex){/* skip unparseable lines */}
+          });
+
+          return read();
+        });
+      }
+
+      return read();
+    }).catch(function(err){
       if(aborted) return;
       finishProgress(key,steps);
       cancel.classList.remove('visible');
       resetProgress(key); go.disabled=false;
       setMsg(msgId,'err','Network error. Check server.');
     });
-    xhr.open('POST',BASE+endpoint);
-    xhr.setRequestHeader('Authorization','Bearer '+_token);
-    xhr.send(formData);
   }
 
   // ── ORG UPLOAD ─────────────────────────────────────────────────────────────
