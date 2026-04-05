@@ -2985,6 +2985,14 @@ loadAccounts();
       det+='<strong>\uD83C\uDDE8\uD83C\uDDE6 Canada (pure_ae_canada.json)</strong><br>';
       det+='\u2022 '+(sca.totalAEs||0)+' total AEs \u00B7 '+(sca.addedAEs||0)+' new \u00B7 '+(sca.updatedAEs||0)+' updated<br>';
       det+='\u2022 '+(sca.addedAccounts||0)+' accounts added \u00B7 '+(sca.updatedAccounts||0)+' updated';
+      // Match cascade stats
+      var ms=data.matchStats||{};
+      if(ms.byEmail||ms.byDuns||ms.byCustNum||ms.byExactName||ms.byFuzzyName||ms.noMatch){
+        det+='<br><br><strong>\uD83D\uDD17 Account Matching</strong><br>';
+        det+='\u2022 Email: '+((ms.byEmail||0))+' \u00B7 DUNS: '+((ms.byDuns||0))+' \u00B7 Cust#: '+((ms.byCustNum||0))+'<br>';
+        det+='\u2022 Exact Name: '+((ms.byExactName||0))+' \u00B7 Fuzzy Name: '+((ms.byFuzzyName||0))+'<br>';
+        if(ms.noMatch) det+='\u2022 No Match: '+ms.noMatch;
+      }
       $('rm-detail').innerHTML=det;
       ['rm-sec-fields','rm-sec-removed','rm-sec-added','rm-sec-changed'].forEach(function(id){$(id).style.display='none';});
       $('rm-download').style.display='none';
